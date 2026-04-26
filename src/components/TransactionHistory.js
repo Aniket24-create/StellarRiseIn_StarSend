@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
-import { ArrowLeft, ExternalLink, Send, Clock, CheckCircle, Filter, Search, Calendar, TrendingUp, Download } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Send, Clock, CheckCircle, Search, Calendar, TrendingUp, Download } from 'lucide-react';
 
 const TransactionHistory = () => {
   const navigate = useNavigate();
-  const { transactions, isWalletConnected, publicKey } = useWallet();
+  const { transactions, isWalletConnected } = useWallet();
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');

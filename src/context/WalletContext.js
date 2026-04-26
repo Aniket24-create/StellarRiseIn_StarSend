@@ -24,6 +24,7 @@ export const WalletProvider = ({ children }) => {
 
   useEffect(() => {
     checkWalletConnection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkWalletConnection = async () => {

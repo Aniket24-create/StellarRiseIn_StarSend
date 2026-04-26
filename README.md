@@ -30,6 +30,8 @@
 
 ## 🚀 Quick Start
 
+**Live Demo:** [https://starsend.vercel.app](https://starsend.vercel.app)
+
 ### Prerequisites
 
 Ensure you have the following installed before proceeding:
