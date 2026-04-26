@@ -59,8 +59,29 @@ const SendTip = () => {
         } 
       });
     } catch (error) {
-      setError('Transaction failed. Please try again.');
       console.error('Send tip error:', error);
+      let errorMessage = 'Transaction failed. Please try again.';
+      
+      if (error?.response?.data?.extras?.result_codes) {
+        const resultCodes = error.response.data.extras.result_codes;
+        if (resultCodes.operations && resultCodes.operations.includes('op_no_destination')) {
+          errorMessage = 'The recipient account does not exist. It must be funded with at least 1 XLM before it can receive tips.';
+        } else if (resultCodes.operations && resultCodes.operations.includes('op_underfunded')) {
+          errorMessage = 'You do not have enough XLM to send this tip.';
+        } else if (resultCodes.operations && resultCodes.operations.includes('op_line_full')) {
+          errorMessage = 'Recipient cannot hold any more XLM.';
+        } else {
+          errorMessage = `Transaction failed: ${resultCodes.operations ? resultCodes.operations[0] : resultCodes.transaction}`;
+        }
+      } else if (error?.message) {
+        if (error.message.includes('User declined')) {
+          errorMessage = 'Transaction was rejected in the wallet.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
     }
   };
 

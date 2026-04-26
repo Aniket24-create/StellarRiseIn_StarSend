@@ -10,23 +10,24 @@ import { WalletProvider, useWallet } from './context/WalletContext';
 function AppContent() {
   const { isWalletConnected } = useWallet();
 
-  // If wallet is connected, show the main app routes
-  if (isWalletConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/send" element={<SendTip />} />
-          <Route path="/success" element={<Success />} />
-          <Route path="/history" element={<TransactionHistory />} />
-        </Routes>
-      </div>
-    );
-  }
-
-  // If wallet is not connected, show Hero landing page
-  return <Hero />;
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Routes>
+        {!isWalletConnected ? (
+          <Route path="*" element={<Hero />} />
+        ) : (
+          <>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/send" element={<SendTip />} />
+            <Route path="/success" element={<Success />} />
+            <Route path="/history" element={<TransactionHistory />} />
+            <Route path="*" element={<Dashboard />} />
+          </>
+        )}
+      </Routes>
+    </div>
+  );
 }
 
 function App() {

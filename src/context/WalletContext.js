@@ -97,6 +97,7 @@ export const WalletProvider = ({ children }) => {
       // Sign transaction with Freighter
       const signedTransaction = await signTransaction(builtTransaction.toXDR(), {
         networkPassphrase: StellarSdk.Networks.TESTNET,
+        network: 'TESTNET'
       });
 
       // Submit transaction
