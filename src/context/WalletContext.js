@@ -29,12 +29,15 @@ export const WalletProvider = ({ children }) => {
 
   const checkWalletConnection = async () => {
     try {
+      // Fast check without timeout for initial load
       const connected = await isConnected();
       if (connected) {
         const key = await getPublicKey();
-        setPublicKey(key);
-        setIsWalletConnected(true);
-        await fetchBalance(key);
+        if (key) {
+          setPublicKey(key);
+          setIsWalletConnected(true);
+          await fetchBalance(key);
+        }
       }
     } catch (error) {
       console.error('Error checking wallet connection:', error);
@@ -44,10 +47,23 @@ export const WalletProvider = ({ children }) => {
   const connectWallet = async () => {
     try {
       setLoading(true);
-      const key = await getPublicKey();
-      setPublicKey(key);
-      setIsWalletConnected(true);
-      await fetchBalance(key);
+      
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Connection timeout - Please ensure Freighter is installed and unlocked')), 10000);
+      });
+
+      const connectPromise = async () => {
+        const connected = await isConnected();
+        if (!connected) {
+          throw new Error('Freighter wallet extension is not installed');
+        }
+        const key = await getPublicKey();
+        setPublicKey(key);
+        setIsWalletConnected(true);
+        await fetchBalance(key);
+      };
+
+      await Promise.race([connectPromise(), timeoutPromise]);
     } catch (error) {
       console.error('Error connecting wallet:', error);
       throw error;
