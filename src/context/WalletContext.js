@@ -132,6 +132,12 @@ export const WalletProvider = ({ children }) => {
     return `${address.slice(0, 6)}...${address.slice(-6)}`;
   };
 
+  const disconnectWallet = () => {
+    setIsWalletConnected(false);
+    setPublicKey('');
+    setBalance('0');
+  };
+
   const value = {
     isWalletConnected,
     publicKey,
@@ -139,6 +145,7 @@ export const WalletProvider = ({ children }) => {
     loading,
     transactions,
     connectWallet,
+    disconnectWallet,
     sendPayment,
     shortenAddress,
     fetchBalance,

@@ -12,7 +12,8 @@ const Dashboard = () => {
     shortenAddress, 
     fetchBalance,
     loading,
-    transactions 
+    transactions,
+    disconnectWallet
   } = useWallet();
 
   useEffect(() => {
@@ -57,7 +58,7 @@ const Dashboard = () => {
             <p className="text-gray-400 mt-2">Your decentralized tipping dashboard</p>
           </div>
           <button
-            onClick={() => navigate('/')}
+            onClick={disconnectWallet}
             className="btn-secondary flex items-center space-x-2 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400"
           >
             <LogOut className="w-4 h-4" />
