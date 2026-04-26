@@ -91,6 +91,9 @@ src/
 - **Non-Custodial:** The application never accesses your private keys. All transaction signing is handled securely by the Freighter extension.
 - **Mainnet Configuration:** To deploy on Mainnet, update the Horizon URL and Network Passphrase in `src/context/WalletContext.js`.
 
+Vercel Deployment Link :- https://starsend.vercel.app/
+
+
 ## 🤝 Contributing
 
 Contributions are welcome! If you'd like to improve the dApp:
