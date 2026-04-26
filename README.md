@@ -1,39 +1,48 @@
-# Stellar TipJar dApp
+<div align="center">
+  <img src="https://stellar.org/images/logo/Stellar_Logo_Icon_Primary.svg" alt="Stellar Logo" width="80" height="80" />
+  <h1 align="center">Stellar TipJar dApp</h1>
+  <p align="center">
+    <strong>The Future of Instant Crypto Tipping</strong>
+  </p>
+  <p align="center">
+    A modern, dark-themed decentralized application for sending XLM tips on the Stellar network. Built with React.js, Tailwind CSS, and seamlessly integrated with the Freighter wallet.
+  </p>
+  
+  <div>
+    <img src="https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React" />
+    <img src="https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+    <img src="https://img.shields.io/badge/Stellar-000000.svg?style=for-the-badge&logo=Stellar&logoColor=white" alt="Stellar" />
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License MIT" />
+  </div>
+</div>
 
-A modern, dark-themed decentralized application for sending XLM tips on the Stellar network. Built with React.js, Tailwind CSS, and integrated with Freighter wallet.
+---
 
-## Features
+## ✨ Features
 
-- 🌟 **Modern Dark UI** - Clean, gradient-based design with blue/purple accents
-- 💰 **Wallet Integration** - Connect with Freighter wallet
-- 📊 **Balance Display** - Real-time XLM balance with USD conversion
-- 💸 **Send Tips** - Easy tip sending with predefined amounts (1, 5, 10 XLM)
-- 📱 **Responsive Design** - Works on desktop and mobile
-- 📈 **Transaction History** - Track all your tip transactions
-- ✅ **Success Screens** - Beautiful confirmation with Stellar Explorer links
-- 🔒 **Testnet Safe** - Built for Stellar testnet
+- 🌟 **Modern Dark UI** - A premium, gradient-based design with vibrant blue and purple accents, glassmorphism, and smooth animations.
+- 💰 **Wallet Integration** - One-click secure connection with the [Freighter](https://freighter.app/) wallet.
+- 📊 **Balance Display** - Real-time XLM balance tracking with dynamic UI updates.
+- 💸 **Instant Tipping** - Send tips globally in under 3 seconds with predefined amounts (1, 5, 10 XLM) or custom values.
+- 📈 **Transaction History** - Track all your outgoing and incoming tips with direct links to the Stellar Block Explorer.
+- 📱 **Responsive Design** - Fully optimized for desktop, tablet, and mobile devices.
+- 🔒 **Testnet Safe** - Built and configured for the Stellar Testnet to allow safe experimentation.
 
-## Prerequisites
+## 🚀 Quick Start
 
-Before running this application, make sure you have:
+### Prerequisites
 
-1. **Node.js** (v16 or higher)
-2. **Freighter Wallet** browser extension installed
-3. **Stellar testnet account** with XLM balance
+Ensure you have the following installed before proceeding:
+1. **[Node.js](https://nodejs.org/)** (v16.0.0 or higher)
+2. **[Freighter Wallet](https://freighter.app/)** browser extension
+3. **Stellar Testnet Account** (You can fund one using the [Friendbot](https://laboratory.stellar.org/#account-creator?network=test))
 
-### Setting up Freighter Wallet
-
-1. Install [Freighter Wallet](https://freighter.app/) browser extension
-2. Create or import a Stellar account
-3. Switch to **Testnet** in Freighter settings
-4. Get testnet XLM from [Stellar Laboratory Friendbot](https://laboratory.stellar.org/#account-creator?network=test)
-
-## Installation
+### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd stellar-tipjar
+   git clone https://github.com/Aniket24-create/StellarRiseIn_StarSend.git
+   cd StellarRiseIn_StarSend
    ```
 
 2. **Install dependencies**
@@ -46,103 +55,54 @@ Before running this application, make sure you have:
    npm start
    ```
 
-4. **Open your browser**
-   Navigate to `http://localhost:3000`
+4. **Explore the dApp**
+   Navigate to `http://localhost:3000` in your browser.
 
-## Usage
+## 💡 How It Works
 
-### 1. Connect Wallet
-- Click "Connect Wallet" on the landing page
-- Approve the connection in Freighter wallet
+1. **Connect:** Click "Connect Wallet" on the landing page to securely link your Freighter wallet.
+2. **Dashboard:** View your current XLM balance, wallet address, and recent activity.
+3. **Send Tip:** Enter the recipient's Stellar public key, choose an amount, add an optional memo, and confirm the transaction in your wallet.
+4. **Track:** Check the "History" tab to see all your past transactions on the ledger.
 
-### 2. View Dashboard
-- See your XLM balance and wallet address
-- Use quick tip buttons for common amounts
+## 🏗️ Architecture & Stack
 
-### 3. Send Tips
-- Enter recipient's Stellar address
-- Choose amount (or use quick buttons)
-- Add optional memo
-- Confirm transaction in Freighter
+- **Frontend Framework:** React.js (Create React App)
+- **Styling:** Tailwind CSS (Utility-first with custom CSS animations and glassmorphism)
+- **Blockchain Interaction:** `@stellar/stellar-sdk`
+- **Wallet Integration:** `@stellar/freighter-api`
+- **Routing:** React Router v6
+- **Icons:** Lucide React
 
-### 4. Track History
-- View all your tip transactions
-- Click "View" to see transaction on Stellar Explorer
-
-## Project Structure
-
-```
+```text
 src/
-├── components/
-│   ├── LandingPage.js      # Welcome screen with wallet connection
-│   ├── Dashboard.js        # Main dashboard with balance and actions
-│   ├── SendTip.js         # Send tip form with validation
-│   ├── Success.js         # Transaction success screen
-│   └── TransactionHistory.js # Transaction history list
-├── context/
-│   └── WalletContext.js   # Wallet state management and Stellar SDK integration
-├── App.js                 # Main app with routing
-├── index.js              # React entry point
-└── index.css             # Tailwind CSS and custom styles
+├── components/          # Reusable UI components (Hero, Dashboard, SendTip, etc.)
+├── context/             # React Context for global state (WalletContext)
+├── App.js               # Main application routing and entry point
+├── index.css            # Tailwind directives and custom animation classes
+└── index.js             # React DOM rendering
 ```
 
-## Key Technologies
+## 🔐 Security & Network Notes
 
-- **React.js** - Frontend framework
-- **Tailwind CSS** - Utility-first CSS framework
-- **Stellar SDK** - Blockchain interaction
-- **Freighter API** - Wallet integration
-- **React Router** - Navigation
-- **Lucide React** - Modern icons
+- **Testnet Only:** By default, this application is configured to run on the **Stellar Testnet**. Do not send real assets.
+- **Non-Custodial:** The application never accesses your private keys. All transaction signing is handled securely by the Freighter extension.
+- **Mainnet Configuration:** To deploy on Mainnet, update the Horizon URL and Network Passphrase in `src/context/WalletContext.js`.
 
-## Stellar Integration
+## 🤝 Contributing
 
-The app uses Stellar SDK to:
-- Connect to Stellar Testnet
-- Load account balances
-- Create and sign transactions
-- Submit payments to the network
+Contributions are welcome! If you'd like to improve the dApp:
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-All transactions are processed on **Stellar Testnet** for safe testing.
+## 📄 License
 
-## Customization
-
-### Styling
-- Colors and gradients are defined in `tailwind.config.js`
-- Custom components are in `src/index.css`
-- Font families: Inter and Poppins from Google Fonts
-
-### Network Configuration
-- Currently configured for Stellar Testnet
-- To switch to Mainnet, update the network configuration in `WalletContext.js`
-
-## Security Notes
-
-- This app is designed for **testnet use only**
-- Always verify recipient addresses before sending
-- Keep your Freighter wallet secure
-- Never share your secret keys
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly on testnet
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues or questions:
-- Check Freighter wallet is installed and unlocked
-- Ensure you're on Stellar testnet
-- Verify you have sufficient XLM balance
-- Check browser console for error messages
+Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-
-**Built with ❤️ for the Stellar ecosystem**
+<div align="center">
+  <sub>Built with ❤️ for the decentralized future.</sub>
+</div>
