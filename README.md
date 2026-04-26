@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="https://stellar.org/images/logo/Stellar_Logo_Icon_Primary.svg" alt="Stellar Logo" width="80" height="80" />
-  <h1 align="center">Stellar TipJar dApp</h1>
+  
+  <h1 align="center">Stellar StarSend dApp</h1>
   <p align="center">
     <strong>The Future of Instant Crypto Tipping</strong>
   </p>
