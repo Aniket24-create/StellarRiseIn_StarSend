@@ -1,16 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Wallet, Send, CheckCircle, Search, History, ArrowRight } from 'lucide-react';
+import { Shield, Wallet, Send, CheckCircle, ArrowRight } from 'lucide-react';
+import { useWallet } from '@/context/WalletContext';
+import Link from 'next/link';
 
 export default function LandingPage() {
-  const [isWalletConnected, setIsWalletConnected] = useState(false);
-
-  const connectWallet = async () => {
-    // This will be replaced with real Freighter logic
-    setIsWalletConnected(true);
-  };
+  const { connect, isConnected, isConnecting } = useWallet();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -24,15 +21,16 @@ export default function LandingPage() {
         </div>
         <div className="hidden md:flex space-x-8 text-sm font-medium">
           <a href="#features" className="hover:text-blue-400 transition-colors">Features</a>
-          <a href="#how-it-works" className="hover:text-blue-400 transition-colors">How it Works</a>
+          <Link href="/dashboard" className="hover:text-blue-400 transition-colors">Dashboard</Link>
           <a href="#about" className="hover:text-blue-400 transition-colors">About</a>
         </div>
         <button 
-          onClick={connectWallet}
-          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full font-semibold text-sm neon-glow-purple hover:scale-105 transition-transform flex items-center space-x-2"
+          onClick={connect}
+          disabled={isConnecting}
+          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full font-semibold text-sm neon-glow-purple hover:scale-105 transition-transform flex items-center space-x-2 disabled:opacity-50"
         >
           <Wallet size={18} />
-          <span>{isWalletConnected ? 'Connected' : 'Connect Wallet'}</span>
+          <span>{isConnecting ? 'Connecting...' : isConnected ? 'Connected' : 'Connect Wallet'}</span>
         </button>
       </nav>
 
@@ -51,14 +49,18 @@ export default function LandingPage() {
             Securely validate digital certificates with blockchain-backed integrity and send instant appreciation tips via the Stellar network.
           </p>
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 justify-center">
-            <button className="px-8 py-4 bg-blue-600 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all flex items-center justify-center space-x-2 glass shadow-neon-blue">
-              <span>Validate Certificate</span>
-              <ArrowRight size={20} />
-            </button>
-            <button className="px-8 py-4 bg-purple-600 rounded-2xl font-bold text-lg hover:bg-purple-700 transition-all flex items-center justify-center space-x-2 glass shadow-neon-purple">
-              <span>Send a Tip</span>
-              <Send size={20} />
-            </button>
+            <Link href="/dashboard">
+              <button className="w-full md:w-auto px-8 py-4 bg-blue-600 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all flex items-center justify-center space-x-2 glass shadow-neon-blue">
+                <span>Validate Certificate</span>
+                <ArrowRight size={20} />
+              </button>
+            </Link>
+            <Link href="/dashboard">
+              <button className="w-full md:w-auto px-8 py-4 bg-purple-600 rounded-2xl font-bold text-lg hover:bg-purple-700 transition-all flex items-center justify-center space-x-2 glass shadow-neon-purple">
+                <span>Send a Tip</span>
+                <Send size={20} />
+              </button>
+            </Link>
           </div>
         </motion.div>
 
