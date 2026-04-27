@@ -85,9 +85,30 @@ To deploy the Soroban contract:
 
 ## 📊 Roadmap & Feedback
 We are committed to continuous improvement based on user feedback.
-- **Current Status**: MVP Functional on Testnet.
-- **User Feedback**: [Excel Sheet Link](https://docs.google.com/spreadsheets/d/placeholder)
-- **Next Iteration**: Implementing **Fee Sponsorship (Gasless)** to allow issuers to pay for student verifications.
+
+- **Phase 1 (MVP)**: Functional certificate validation and XLM tipping on Testnet. (Completed)
+- **Phase 2 (Feedback)**: [Google Form for Feedback](https://forms.gle/placeholder) | [Feedback Data (Excel)](https://docs.google.com/spreadsheets/d/placeholder)
+- **Phase 3 (Scaling)**: 
+  - [ ] Implement **Fee Sponsorship** for gasless transactions.
+  - [ ] Add **Multi-signature approval** for institutional certificates.
+  - [ ] Scale to 30+ active users with real-time monitoring.
+
+---
+
+## 🛠️ Project Structure
+
+```text
+├── contracts/             # Soroban Smart Contracts (Rust)
+│   └── certifyx_contract/ # Core logic for on-chain anchoring
+├── src/
+│   ├── app/               # Next.js App Router (Pages & Layout)
+│   ├── components/        # Reusable UI Components (Glassmorphism)
+│   ├── context/           # Wallet & Global State
+│   ├── lib/               # Stellar SDK Helpers & Logic
+│   └── styles/            # Global CSS & Tailwind Config
+├── public/                # Static Assets
+└── README.md              # Documentation
+```
 
 ---
 
@@ -100,4 +121,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the MIT License.
 
 ---
+
 Built with ❤️ for the **Stellar Ecosystem**. Ready for **Demo Day**.
