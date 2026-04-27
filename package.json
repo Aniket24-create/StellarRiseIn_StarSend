@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@next/swc-wasm-nodejs": "^16.2.4",
     "@stellar/freighter-api": "latest",
     "@stellar/stellar-sdk": "latest",
     "clsx": "^2.1.1",
