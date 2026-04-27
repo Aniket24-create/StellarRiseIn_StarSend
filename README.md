@@ -87,7 +87,7 @@ To deploy the Soroban contract:
 We are committed to continuous improvement based on user feedback.
 
 - **Phase 1 (MVP)**: Functional certificate validation and XLM tipping on Testnet. (Completed)
-- **Phase 2 (Feedback)**: [Google Form for Feedback](https://forms.gle/placeholder) | [Feedback Data (Excel)](https://docs.google.com/spreadsheets/d/placeholder)
+- **Phase 2 (Feedback)**: [Google Form for Feedback](https://forms.gle/your-google-form-id) | [Feedback Data (Excel)](https://docs.google.com/spreadsheets/d/your-excel-id)
 - **Phase 3 (Scaling)**: 
   - [ ] Implement **Fee Sponsorship** for gasless transactions.
   - [ ] Add **Multi-signature approval** for institutional certificates.
