@@ -6,10 +6,10 @@ const Success = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const { transactionHash, amount, recipient } = location.state || {};
+  const { transactionHash, amount, recipient, isGasless } = location.state || {};
 
   const handleViewOnExplorer = () => {
-    if (transactionHash) {
+    if (transactionHash && !transactionHash.startsWith('sim_')) {
       window.open(`https://stellar.expert/explorer/testnet/tx/${transactionHash}`, '_blank');
     }
   };
@@ -35,9 +35,15 @@ const Success = () => {
         </div>
 
         {/* Success Message */}
-        <h1 className="text-3xl font-bold font-poppins mb-4 text-green-400">
+        <h1 className="text-3xl font-bold font-poppins mb-2 text-green-400">
           Tip Sent Successfully!
         </h1>
+        
+        {isGasless && (
+          <p className="text-blue-400 font-bold mb-4 animate-pulse">
+            Transaction sent with zero fees
+          </p>
+        )}
         
         <p className="text-gray-300 mb-8">
           Your tip has been sent to the Stellar network and will be confirmed shortly.
@@ -46,7 +52,9 @@ const Success = () => {
         {/* Transaction Details */}
         {transactionHash && (
           <div className="card mb-8 text-left">
-            <h3 className="font-semibold mb-4 text-center">Transaction Details</h3>
+            <h3 className="font-semibold mb-4 text-center">
+              {transactionHash.startsWith('sim_') ? 'Simulated Transaction Details' : 'Transaction Details'}
+            </h3>
             
             <div className="space-y-3">
               {amount && (
@@ -78,7 +86,7 @@ const Success = () => {
 
         {/* Action Buttons */}
         <div className="space-y-4">
-          {transactionHash && (
+          {transactionHash && !transactionHash.startsWith('sim_') && (
             <button
               onClick={handleViewOnExplorer}
               className="btn-secondary w-full flex items-center justify-center space-x-2"

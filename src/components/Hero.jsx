@@ -59,20 +59,51 @@ function FAQItem({ q, a }) {
 /* ──────────────────────────── HERO COMPONENT ──────────────────────────── */
 export default function Hero() {
   const navigate = useNavigate();
-  const { connectWallet, loading } = useWallet();
+  const { connectWallet, simulateConnection, loading } = useWallet();
+  const [error, setError] = useState('');
 
   const handleConnect = async () => {
+    setError('');
     try {
       await connectWallet();
       navigate('/dashboard');
-    } catch (error) {
-      alert('Failed to connect wallet. Please make sure Freighter is installed and unlocked.');
+    } catch (err) {
+      if (err.message.includes('installed')) {
+        setError('Freighter wallet extension not detected. Please install it from freighter.app');
+      } else {
+        setError('Failed to connect wallet. Please make sure Freighter is unlocked.');
+      }
     }
+  };
+
+  const handleSimulate = () => {
+    simulateConnection();
+    navigate('/dashboard');
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#020617] via-[#0a0f1e] to-[#0c0a20] text-white flex flex-col relative overflow-hidden">
-
+      
+      {/* Error Toast */}
+      {error && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 animate-fade-in w-full max-w-md px-4">
+          <div className="px-6 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 backdrop-blur-xl flex flex-col gap-3 text-red-400 shadow-2xl shadow-red-500/10">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-sm font-medium">{error}</span>
+              <button onClick={() => setError('')} className="ml-auto hover:text-white transition-colors">
+                <CheckCircle2 className="w-4 h-4 rotate-45" />
+              </button>
+            </div>
+            <button 
+              onClick={handleSimulate}
+              className="text-xs font-bold uppercase tracking-wider text-white bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-lg transition-all text-center border border-red-500/30"
+            >
+              Simulate Connection (Dev Mode)
+            </button>
+          </div>
+        </div>
+      )}
       {/* ─── Ambient Background ─── */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] bg-purple-600/[0.07] blur-[150px] rounded-full animate-pulse-slow" />
@@ -103,14 +134,22 @@ export default function Hero() {
           <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
         </div>
 
-        <button
-          onClick={handleConnect}
-          disabled={loading}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Wallet className="w-4 h-4" />
-          {loading ? 'Connecting…' : 'Connect Wallet'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleConnect}
+            disabled={loading}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Wallet className="w-4 h-4" />
+            {loading ? 'Connecting…' : 'Connect'}
+          </button>
+          <button
+            onClick={handleSimulate}
+            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 hover:bg-white/5 text-xs font-bold text-gray-400 transition-all"
+          >
+            Demo
+          </button>
+        </div>
       </nav>
 
       {/* ═══════════════════ HERO SECTION ═══════════════════ */}
@@ -151,19 +190,18 @@ export default function Hero() {
                   </>
                 ) : (
                   <>
-                    Get Started
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    Connect Wallet
+                    <Wallet className="w-5 h-5 text-purple-600" />
                   </>
                 )}
               </button>
 
               <button
-                onClick={handleConnect}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 px-8 py-4 border border-gray-600 rounded-full font-semibold text-base hover:bg-white/5 hover:border-gray-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSimulate}
+                className="flex items-center justify-center gap-2 px-8 py-4 border border-purple-500/30 bg-purple-500/5 rounded-full font-semibold text-base hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-300 text-purple-300"
               >
-                <Wallet className="w-5 h-5 text-purple-400" />
-                Connect Wallet
+                <Sparkles className="w-5 h-5" />
+                Try Demo Mode
               </button>
             </div>
 

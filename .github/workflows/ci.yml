@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,27 +7,64 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  # Frontend Build & Test
+  frontend:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up Node.js ${{ matrix.node-version }}
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '20'
         cache: 'npm'
-
+        
     - name: Install dependencies
       run: npm ci
-
-    - name: Build the project
+      
+    - name: Build Frontend
       run: npm run build
       env:
         CI: true
+
+  # Smart Contract Build & Test
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+        
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        working-directory: contracts
+        
+    - name: Build Smart Contract
+      run: |
+        cd contracts
+        cargo build --target wasm32-unknown-unknown --release
+        
+    - name: Run Contract Tests
+      run: |
+        cd contracts
+        cargo test
+
+  # Continuous Deployment (Example for Vercel)
+  deploy:
+    needs: [frontend, contracts]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v20
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        vercel-args: '--prod'

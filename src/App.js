@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Hero from './components/Hero';
-import Dashboard from './components/Dashboard';
+import Dashboard from './components/Dashboard.jsx';
 import SendTip from './components/SendTip';
 import Success from './components/Success';
 import TransactionHistory from './components/TransactionHistory';

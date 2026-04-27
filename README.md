@@ -1,113 +1,118 @@
+# 🪙 StarSend (StellarRiseIn)
+
 <div align="center">
-  
-  <h1 align="center">Stellar StarSend dApp</h1>
-  <p align="center">
-    <strong>The Future of Instant Crypto Tipping</strong>
-  </p>
-  <p align="center">
-    A modern, dark-themed decentralized application for sending XLM tips on the Stellar network. Built with React.js, Tailwind CSS, and seamlessly integrated with the Freighter wallet.
-  </p>
-  
-  <div>
-    <img src="https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React" />
-    <img src="https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
-    <img src="https://img.shields.io/badge/Stellar-000000.svg?style=for-the-badge&logo=Stellar&logoColor=white" alt="Stellar" />
-    <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License MIT" />
-  </div>
+  <img src="https://img.shields.io/badge/Stellar-000000?style=for-the-badge&logo=stellar&logoColor=white" alt="Stellar" />
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
 </div>
 
 ---
 
-## ✨ Features
+## 🚀 Overview
 
-- 🌟 **Modern Dark UI** - A premium, gradient-based design with vibrant blue and purple accents, glassmorphism, and smooth animations.
-- 💰 **Wallet Integration** - One-click secure connection with the [Freighter](https://freighter.app/) wallet.
-- 📊 **Balance Display** - Real-time XLM balance tracking with dynamic UI updates.
-- 💸 **Instant Tipping** - Send tips globally in under 3 seconds with predefined amounts (1, 5, 10 XLM) or custom values.
-- 📈 **Transaction History** - Track all your outgoing and incoming tips with direct links to the Stellar Block Explorer.
-- 📱 **Responsive Design** - Fully optimized for desktop, tablet, and mobile devices.
-- 🔒 **Testnet Safe** - Built and configured for the Stellar Testnet to allow safe experimentation.
+**StarSend** is a premium, gasless micro-tipping dApp built on the **Stellar Testnet**. It allows users to send XLM tips to any Stellar address or federation alias instantly, with a focus on a seamless user experience and modern UI.
 
-## 🚀 Quick Start
+### 🔗 Quick Links
+- **Live Demo:** [https://stellar-rise-in-star-send.vercel.app/](https://stellar-rise-in-star-send.vercel.app/)
+- **Smart Contract Docs:** [Google Drive Reference](https://drive.google.com/file/d/157Dmtl1B84Ruxj4ppNiP84yQJXNSvqCY/view?usp=drive_link)
+- **GitHub Repository:** [Aniket24-create/StellarRiseIn_StarSend](https://github.com/Aniket24-create/StellarRiseIn_StarSend)
 
-**Live Demo:** [https://starsend.vercel.app](https://starsend.vercel.app)
+---
+
+## ✨ Key Features
+
+- 💸 **Gasless Tipping** - Simulated gasless mode for zero-fee transactions.
+- 🔑 **Freighter Wallet** - Seamless integration with the Freighter browser extension.
+- 🌐 **Federation Support** - Resolve aliases like `@aniket` or `@john` to public keys.
+- 📊 **Real-time Dashboard** - Live XLM balance and transaction history.
+- 📷 **QR Code Scanner** - Quickly scan recipient addresses via camera.
+- 🔓 **Demo Mode** - Test the app without needing a real wallet installed.
+- 🎨 **Premium UI** - Glassmorphism design with neon accents and micro-animations.
+
+---
+
+## 📸 Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><b>Landing Page</b></td>
+      <td align="center"><b>Dashboard</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/ui%20page%20.png" width="400px" /></td>
+      <td><img src="screenshots/ui%20page%202.png" width="400px" /></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Wallet Connection</b></td>
+      <td align="center"><b>Payment Confirmation</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/wallect%20connction%20.png" width="400px" /></td>
+      <td><img src="screenshots/pay%20conff.png" width="400px" /></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Payment Successful</b></td>
+      <td align="center"><b>Transaction History</b></td>
+    </tr>
+    <tr>
+      <td><img src="screenshots/payment%20successfuly.png" width="400px" /></td>
+      <td><img src="screenshots/connection.png" width="400px" /></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 🏗️ Technical Architecture
+
+### Frontend Stack
+- **Framework:** React.js
+- **Styling:** Tailwind CSS + Lucide Icons
+- **Blockchain:** `@stellar/stellar-sdk`
+- **Wallet:** `@stellar/freighter-api`
+- **Routing:** React Router v6
+
+### Smart Contract (Soroban)
+The project includes a Rust-based smart contract located in the `/contracts` folder.
+- **`init`**: Initialize the TipJar with an owner address.
+- **`tip`**: Log a tipping event on the Stellar ledger.
+- **`get_owner`**: Retrieve the current TipJar owner.
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-
-Ensure you have the following installed before proceeding:
-1. **[Node.js](https://nodejs.org/)** (v16.0.0 or higher)
-2. **[Freighter Wallet](https://freighter.app/)** browser extension
-3. **Stellar Testnet Account** (You can fund one using the [Friendbot](https://laboratory.stellar.org/#account-creator?network=test))
+- Node.js ≥ 18
+- npm ≥ 9
+- [Freighter Wallet](https://freighter.app/) extension (optional if using Demo Mode)
 
 ### Installation
-
-1. **Clone the repository**
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/Aniket24-create/StellarRiseIn_StarSend.git
    cd StellarRiseIn_StarSend
    ```
-
-2. **Install dependencies**
+2. **Install dependencies:**
    ```bash
    npm install
    ```
-
-3. **Start the development server**
+3. **Run locally:**
    ```bash
    npm start
    ```
 
-4. **Explore the dApp**
-   Navigate to `http://localhost:3000` in your browser.
+---
 
-## 💡 How It Works
-
-1. **Connect:** Click "Connect Wallet" on the landing page to securely link your Freighter wallet.
-2. **Dashboard:** View your current XLM balance, wallet address, and recent activity.
-3. **Send Tip:** Enter the recipient's Stellar public key, choose an amount, add an optional memo, and confirm the transaction in your wallet.
-4. **Track:** Check the "History" tab to see all your past transactions on the ledger.
-
-## 🏗️ Architecture & Stack
-
-- **Frontend Framework:** React.js (Create React App)
-- **Styling:** Tailwind CSS (Utility-first with custom CSS animations and glassmorphism)
-- **Blockchain Interaction:** `@stellar/stellar-sdk`
-- **Wallet Integration:** `@stellar/freighter-api`
-- **Routing:** React Router v6
-- **Icons:** Lucide React
-
-```text
-src/
-├── components/          # Reusable UI components (Hero, Dashboard, SendTip, etc.)
-├── context/             # React Context for global state (WalletContext)
-├── App.js               # Main application routing and entry point
-├── index.css            # Tailwind directives and custom animation classes
-└── index.js             # React DOM rendering
-```
-
-## 🔐 Security & Network Notes
-
-- **Testnet Only:** By default, this application is configured to run on the **Stellar Testnet**. Do not send real assets.
-- **Non-Custodial:** The application never accesses your private keys. All transaction signing is handled securely by the Freighter extension.
-- **Mainnet Configuration:** To deploy on Mainnet, update the Horizon URL and Network Passphrase in `src/context/WalletContext.js`.
-
-Vercel Deployment Link :- https://starsend.vercel.app/
-
-
-## 🤝 Contributing
-
-Contributions are welcome! If you'd like to improve the dApp:
-1. Fork the project
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+## 🔒 Security & Environment
+- **Network:** Configured for **Stellar Testnet**.
+- **Non-Custodial:** StarSend never stores or accesses your private keys.
+- **CI/CD:** Automated deployments via GitHub Actions and Vercel.
 
 ---
+
 <div align="center">
-  <sub>Built with ❤️ for the decentralized future.</sub>
+  <sub>Built with ❤️ for the Stellar Ecosystem</sub>
 </div>

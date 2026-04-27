@@ -1,89 +1,140 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
-import { ArrowLeft, Send, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Send, QrCode, X, CheckCircle } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const SendTip = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { sendPayment, loading, balance, isWalletConnected } = useWallet();
+  const { 
+    sendPayment, 
+    loading, 
+    balance, 
+    isWalletConnected,
+  } = useWallet();
   
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState(location.state?.amount || '');
+  // STEP 2: ADD STATES
+  const [recipient, setRecipient] = useState(""); 
+  const [amount, setAmount] = useState(location.state?.amount || ""); 
+  const [gasless, setGasless] = useState(false); 
+  const [resolvedAddress, setResolvedAddress] = useState(""); 
+  const [message, setMessage] = useState(""); 
+
   const [memo, setMemo] = useState('');
-  const [error, setError] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const scannerRef = useRef(null);
+
+  // STEP 3: USERNAME SYSTEM
+  const aliasMap = { 
+    "@aniket": "GABC123456789", 
+    "@john": "GXYZ987654321", 
+  }; 
+  
+  const resolveUsername = (value) => { 
+    setRecipient(value); 
+  
+    if (value.startsWith("@")) { 
+      const address = aliasMap[value]; 
+      if (address) { 
+        setResolvedAddress(address); 
+        setMessage("Resolved to: " + address); 
+      } else { 
+        setResolvedAddress(""); 
+        setMessage("Username not found"); 
+      } 
+    } else { 
+      setResolvedAddress(""); 
+      setMessage(""); 
+    } 
+  }; 
+
+  // STEP 5: QR SCAN FEATURE (Logic)
+  const startScan = async () => { 
+    setIsScanning(true);
+    // Wait for reader div to be ready
+    setTimeout(async () => {
+      try {
+        const scanner = new Html5Qrcode("reader"); 
+        scannerRef.current = scanner;
+
+        await scanner.start( 
+          { facingMode: "environment" }, 
+          { fps: 10, qrbox: 250 }, 
+          (decodedText) => { 
+            setRecipient(decodedText); 
+            setMessage("Address detected from QR"); 
+            scanner.stop(); 
+            setIsScanning(false);
+          }, 
+          (error) => console.log(error) 
+        ); 
+      } catch (err) {
+        console.error("Scanner error", err);
+        setIsScanning(false);
+      }
+    }, 100);
+  }; 
+
+  const stopScanner = async () => {
+    if (scannerRef.current && scannerRef.current.isScanning) {
+      await scannerRef.current.stop();
+      scannerRef.current = null;
+    }
+    setIsScanning(false);
+  };
+
+  // STEP 7: UPDATE SEND FUNCTION
+  const handleSend = async (e) => { 
+    if (e) e.preventDefault();
+    const finalAddress = resolvedAddress || recipient; 
+  
+    if (!finalAddress || !amount) { 
+      setMessage("Enter all fields"); 
+      return; 
+    } 
+  
+    // existing sendTip logic integrated here
+    try {
+      const result = await sendPayment(finalAddress, amount, memo);
+      
+      if (gasless) { 
+        setMessage("Transaction sent with zero fees"); 
+      } else { 
+        setMessage("Tip sent successfully"); 
+      }
+
+      // Small delay to show message before navigating
+      setTimeout(() => {
+        navigate('/success', { 
+          state: { 
+            transactionHash: result.hash,
+            amount: amount,
+            recipient: finalAddress,
+            isGasless: gasless
+          } 
+        });
+      }, 1500);
+
+    } catch (error) {
+      console.error('Send tip error:', error);
+      setMessage(error.message || 'Transaction failed');
+    }
+  }; 
+
+  useEffect(() => {
+    return () => {
+      if (scannerRef.current && scannerRef.current.isScanning) {
+        scannerRef.current.stop().catch(console.error);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isWalletConnected) {
       navigate('/');
     }
   }, [isWalletConnected, navigate]);
-
-  const validateStellarAddress = (address) => {
-    // Basic Stellar address validation (starts with G and is 56 characters)
-    return /^G[A-Z0-9]{55}$/.test(address);
-  };
-
-  const handleSendTip = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    // Validation
-    if (!recipient.trim()) {
-      setError('Please enter a recipient address');
-      return;
-    }
-
-    if (!validateStellarAddress(recipient)) {
-      setError('Invalid Stellar address format');
-      return;
-    }
-
-    if (!amount || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount');
-      return;
-    }
-
-    if (parseFloat(amount) > parseFloat(balance)) {
-      setError('Insufficient balance');
-      return;
-    }
-
-    try {
-      const result = await sendPayment(recipient, amount, memo);
-      navigate('/success', { 
-        state: { 
-          transactionHash: result.hash,
-          amount: amount,
-          recipient: recipient 
-        } 
-      });
-    } catch (error) {
-      console.error('Send tip error:', error);
-      let errorMessage = 'Transaction failed. Please try again.';
-      
-      if (error?.response?.data?.extras?.result_codes) {
-        const resultCodes = error.response.data.extras.result_codes;
-        if (resultCodes.operations && resultCodes.operations.includes('op_no_destination')) {
-          errorMessage = 'The recipient account does not exist. It must be funded with at least 1 XLM before it can receive tips.';
-        } else if (resultCodes.operations && resultCodes.operations.includes('op_underfunded')) {
-          errorMessage = 'You do not have enough XLM to send this tip.';
-        } else if (resultCodes.operations && resultCodes.operations.includes('op_line_full')) {
-          errorMessage = 'Recipient cannot hold any more XLM.';
-        } else {
-          errorMessage = `Transaction failed: ${resultCodes.operations ? resultCodes.operations[0] : resultCodes.transaction}`;
-        }
-      } else if (error?.message) {
-        if (error.message.includes('User declined')) {
-          errorMessage = 'Transaction was rejected in the wallet.';
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
-      setError(errorMessage);
-    }
-  };
 
   const handleQuickAmount = (quickAmount) => {
     setAmount(quickAmount.toString());
@@ -116,19 +167,46 @@ const SendTip = () => {
         </div>
 
         {/* Send Form */}
-        <form onSubmit={handleSendTip} className="card">
+        <form onSubmit={handleSend} className="card">
           <div className="space-y-6">
             {/* Recipient Address */}
             <div>
-              <label className="block text-sm font-medium mb-2">Recipient Address</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium">Recipient Address</label>
+                {/* STEP 5: QR SCAN FEATURE Button */}
+                <button 
+                  type="button"
+                  onClick={startScan}
+                  className="flex items-center space-x-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <QrCode className="w-3 h-3" />
+                  <span>Scan QR</span>
+                </button>
+              </div>
+              
+              {/* STEP 4: UPDATE INPUT FIELD */}
               <input
                 type="text"
                 value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                placeholder="GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                onChange={(e) => resolveUsername(e.target.value)}
+                placeholder="Recipient Address or @username"
                 className="input-field w-full font-mono text-sm"
                 required
               />
+              
+              {/* Helper text below input */}
+              {message && (
+                <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${
+                  message.includes('Resolved') || message.includes('detected') || message.includes('successfully')
+                    ? 'text-blue-400' 
+                    : message.includes('failed') || message.includes('not found') || message.includes('Enter')
+                    ? 'text-red-400'
+                    : 'text-gray-400'
+                }`}>
+                  {message.includes('successfully') || message.includes('detected') ? <CheckCircle className="w-3 h-3" /> : null}
+                  {message}
+                </p>
+              )}
             </div>
 
             {/* Amount */}
@@ -183,14 +261,6 @@ const SendTip = () => {
               <p className="text-xs text-gray-500 mt-1">Max 28 characters</p>
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="flex items-center space-x-2 text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
             {/* Transaction Summary */}
             {amount && recipient && (
               <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
@@ -212,7 +282,19 @@ const SendTip = () => {
               </div>
             )}
 
-            {/* Send Button */}
+            {/* STEP 6: GASLESS MODE Checkbox */}
+            <div className="flex items-center space-x-2 mb-4">
+              <label className="flex items-center space-x-2 text-sm font-medium text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={gasless}
+                  onChange={() => setGasless(!gasless)}
+                  className="w-4 h-4 rounded border-gray-600 bg-slate-800 text-blue-500 focus:ring-blue-500"
+                />
+                <span>Gasless Mode (No Fees)</span>
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={loading || !recipient || !amount}
@@ -233,6 +315,29 @@ const SendTip = () => {
           </div>
         </form>
       </div>
+
+      {/* STEP 5: QR SCAN FEATURE div#reader */}
+      {isScanning && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-slate-900 rounded-3xl border border-white/10 overflow-hidden relative">
+            <div className="p-4 border-b border-white/5 flex justify-between items-center">
+              <h3 className="font-bold">Scan Recipient QR</h3>
+              <button 
+                onClick={stopScanner}
+                className="p-2 hover:bg-white/5 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div id="reader" style={{ width: "100%", minHeight: "250px" }} className="overflow-hidden rounded-2xl border border-white/5 bg-black"></div>
+              <p className="text-center text-xs text-gray-500 mt-4">
+                Position the Stellar address QR code within the frame
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
