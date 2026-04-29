@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard.jsx';
 import SendTip from './components/SendTip';
 import Success from './components/Success';
 import TransactionHistory from './components/TransactionHistory';
+import CreatorProfile from './components/CreatorProfile';
 import { WalletProvider, useWallet } from './context/WalletContext';
 
 function AppContent() {
@@ -13,6 +14,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Routes>
+        <Route path="/:username" element={<CreatorProfile />} />
         {!isWalletConnected ? (
           <Route path="*" element={<Hero />} />
         ) : (

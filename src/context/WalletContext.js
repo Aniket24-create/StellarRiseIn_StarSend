@@ -20,6 +20,32 @@ export const WalletProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const [isGaslessEnabled, setIsGaslessEnabled] = useState(false);
+  const [analytics, setAnalytics] = useState({
+    totalTipsSent: 0,
+    totalXLMSent: 0,
+    transactionCount: 0
+  });
+
+  // Mock Username Mapping
+  const usernameMap = {
+    '@aniket': 'GCPWRE2D7K2C7A7M7D7J7I7G7H7E7L7L7A7R7N7E7T7W7O7R7K7H7X7Y7Z7',
+    '@starlord': 'GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD',
+    '@creator': 'GB7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V7V'
+  };
+
+  const resolveUsername = (input) => {
+    if (input.startsWith('@')) {
+      return usernameMap[input.toLowerCase()] || null;
+    }
+    return input;
+  };
+
+  const disconnectWallet = () => {
+    setIsWalletConnected(false);
+    setPublicKey('');
+    setBalance('0');
+    setIsSimulated(false);
+  };
 
   // Initialize Stellar server (testnet)
   const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.org');
@@ -182,6 +208,13 @@ export const WalletProvider = ({ children }) => {
       };
 
       setTransactions(prev => [newTransaction, ...prev]);
+      
+      // Update Analytics
+      setAnalytics(prev => ({
+        totalTipsSent: prev.totalTipsSent + 1,
+        totalXLMSent: prev.totalXLMSent + parseFloat(amount),
+        transactionCount: prev.transactionCount + 1
+      }));
 
       return transactionResult;
     } catch (error) {
@@ -223,6 +256,8 @@ export const WalletProvider = ({ children }) => {
     fetchBalance,
     isGaslessEnabled,
     setIsGaslessEnabled,
+    analytics,
+    resolveUsername,
   };
 
   return (

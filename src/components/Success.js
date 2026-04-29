@@ -1,12 +1,56 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle, ExternalLink, Home, Send } from 'lucide-react';
+import { CheckCircle, ExternalLink, Home, Send, Copy, FileText, Link as LinkIcon } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
 const Success = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [copiedHash, setCopiedHash] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   
-  const { transactionHash, amount, recipient, isGasless } = location.state || {};
+  const { transactionHash, amount, recipient, isGasless, timestamp } = location.state || {};
+
+  const handleDownloadReceipt = () => {
+    const doc = new jsPDF();
+    
+    // Add content to PDF
+    doc.setFontSize(22);
+    doc.text('StarSend Tip Receipt', 20, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Date: ${new Date(timestamp || Date.now()).toLocaleString()}`, 20, 40);
+    doc.text(`Amount: ${amount} XLM`, 20, 50);
+    doc.text(`Recipient: ${recipient}`, 20, 60);
+    doc.text(`Transaction Hash: ${transactionHash}`, 20, 70);
+    doc.text(`Status: Success`, 20, 80);
+    doc.text(`Fee: ${isGasless ? '0 XLM (Gasless)' : '0.00001 XLM'}`, 20, 90);
+    
+    doc.text('Thank you for using StarSend!', 20, 110);
+    
+    doc.save(`starsend-receipt-${transactionHash.slice(0, 8)}.pdf`);
+  };
+
+  const handleCopyHash = async () => {
+    try {
+      await navigator.clipboard.writeText(transactionHash);
+      setCopiedHash(true);
+      setTimeout(() => setCopiedHash(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy hash:', err);
+    }
+  };
+
+  const handleCopyPaymentLink = async () => {
+    const link = `${window.location.origin}/send?to=${recipient}&amount=${amount}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
 
   const handleViewOnExplorer = () => {
     if (transactionHash && !transactionHash.startsWith('sim_')) {
@@ -73,7 +117,12 @@ const Success = () => {
               
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Transaction ID:</span>
-                <span className="font-mono text-sm">{shortenHash(transactionHash)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-sm">{shortenHash(transactionHash)}</span>
+                  <button onClick={handleCopyHash} className="p-1 hover:bg-white/10 rounded transition-colors">
+                    {copiedHash ? <CheckCircle className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-blue-400" />}
+                  </button>
+                </div>
               </div>
               
               <div className="flex justify-between items-center">
@@ -86,6 +135,21 @@ const Success = () => {
 
         {/* Action Buttons */}
         <div className="space-y-4">
+          <button
+            onClick={handleDownloadReceipt}
+            className="btn-primary w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-600"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Download Receipt</span>
+          </button>
+
+          <button
+            onClick={handleCopyPaymentLink}
+            className="btn-secondary w-full flex items-center justify-center space-x-2"
+          >
+            <LinkIcon className="w-4 h-4 text-purple-400" />
+            <span>{copiedLink ? 'Link Copied!' : 'Copy Payment Link'}</span>
+          </button>
           {transactionHash && !transactionHash.startsWith('sim_') && (
             <button
               onClick={handleViewOnExplorer}

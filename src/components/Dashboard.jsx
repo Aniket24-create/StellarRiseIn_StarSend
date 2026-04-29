@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
+import { QRCodeSVG } from 'qrcode.react';
 import { 
   Send, 
   Copy, 
@@ -12,7 +13,11 @@ import {
   CreditCard,
   ExternalLink,
   ArrowUpRight,
-  ShieldCheck
+  ShieldCheck,
+  Share2,
+  Download,
+  BarChart3,
+  QrCode
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -25,10 +30,12 @@ const Dashboard = () => {
     shortenAddress, 
     transactions,
     disconnectWallet,
-    fetchBalance
+    fetchBalance,
+    analytics
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     if (!isWalletConnected) {
@@ -46,6 +53,37 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Failed to copy address:', err);
     }
+  };
+
+  const handleShareLink = async () => {
+    // Using a mock username for the link - in a real app this would be the user's registered name
+    const shareLink = `${window.location.origin}/aniket`; 
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  const downloadQR = () => {
+    const canvas = document.querySelector('svg');
+    const svgData = new XMLSerializer().serializeToString(canvas);
+    const canvasElement = document.createElement('canvas');
+    const ctx = canvasElement.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvasElement.width = img.width;
+      canvasElement.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      const pngFile = canvasElement.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.download = 'my-tip-qr.png';
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   };
 
   if (!isWalletConnected) return null;
@@ -190,6 +228,62 @@ const Dashboard = () => {
 
           {/* ────────────────────────── RIGHT COLUMN ────────────────────────── */}
           <div className="lg:col-span-4 space-y-8">
+            
+            {/* 1. ANALYTICS CARD */}
+            <div className="glass-card p-6 rounded-3xl border border-white/10 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <BarChart3 className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-bold">My Analytics</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Total Tips</p>
+                  <p className="text-xl font-bold">{analytics.totalTipsSent}</p>
+                </div>
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Total XLM</p>
+                  <p className="text-xl font-bold">{analytics.totalXLMSent.toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. RECEIVE TIPS (QR GENERATOR) */}
+            <div className="glass-card p-6 rounded-3xl border border-white/10 text-center">
+              <div className="flex items-center gap-3 mb-6 text-left">
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <QrCode className="w-5 h-5 text-green-400" />
+                </div>
+                <h3 className="text-lg font-bold">Receive Tips</h3>
+              </div>
+              
+              <div className="bg-white p-4 rounded-2xl inline-block mb-6 shadow-xl shadow-blue-500/5">
+                <QRCodeSVG 
+                  value={`stellar:wallet?to=${publicKey}&amount=5`}
+                  size={140}
+                  level="H"
+                />
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={downloadQR}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs font-bold"
+                >
+                  <Download className="w-4 h-4 text-blue-400" />
+                  <span>Download QR</span>
+                </button>
+                <button 
+                  onClick={handleShareLink}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 hover:border-purple-500/50 transition-all text-xs font-bold text-purple-300"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>{copiedLink ? 'Link Copied!' : 'Share My Tip Link'}</span>
+                </button>
+              </div>
+            </div>
             
             {/* 3. QUICK ACTIONS (PART 2 - QUICK TIPS) */}
             <div className="glass-card p-6 rounded-3xl border border-white/10">

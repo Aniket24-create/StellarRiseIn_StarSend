@@ -1,53 +1,66 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
-import { ArrowLeft, Send, QrCode, X, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Send, QrCode, X, CheckCircle, Copy, Link as LinkIcon } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 
 const SendTip = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { 
     sendPayment, 
     loading, 
     balance, 
     isWalletConnected,
+    resolveUsername: globalResolveUsername
   } = useWallet();
   
   // STEP 2: ADD STATES
-  const [recipient, setRecipient] = useState(""); 
-  const [amount, setAmount] = useState(location.state?.amount || ""); 
+  const [recipient, setRecipient] = useState(searchParams.get('to') || ""); 
+  const [amount, setAmount] = useState(searchParams.get('amount') || location.state?.amount || ""); 
   const [gasless, setGasless] = useState(false); 
   const [resolvedAddress, setResolvedAddress] = useState(""); 
   const [message, setMessage] = useState(""); 
+  const [status, setStatus] = useState(""); // Sending, Success, Failed
 
   const [memo, setMemo] = useState('');
   const [isScanning, setIsScanning] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const scannerRef = useRef(null);
 
-  // STEP 3: USERNAME SYSTEM
-  const aliasMap = { 
-    "@aniket": "GABC123456789", 
-    "@john": "GXYZ987654321", 
-  }; 
-  
+  useEffect(() => {
+    // Initial resolution for deep links
+    if (recipient.startsWith('@')) {
+      const resolved = globalResolveUsername(recipient);
+      if (resolved) {
+        setResolvedAddress(resolved);
+      }
+    }
+  }, []);
+
   const resolveUsername = (value) => { 
     setRecipient(value); 
-  
-    if (value.startsWith("@")) { 
-      const address = aliasMap[value]; 
-      if (address) { 
-        setResolvedAddress(address); 
-        setMessage("Resolved to: " + address); 
-      } else { 
-        setResolvedAddress(""); 
-        setMessage("Username not found"); 
-      } 
+    const address = globalResolveUsername(value);
+    if (address && value.startsWith('@')) { 
+      setResolvedAddress(address); 
+      setMessage("Resolved to: " + address); 
     } else { 
       setResolvedAddress(""); 
-      setMessage(""); 
+      setMessage(value.startsWith('@') ? "Username not found" : ""); 
     } 
   }; 
+
+  const handleCopyPaymentLink = async () => {
+    const link = `${window.location.origin}/send?to=${recipient}&amount=${amount}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
 
   // STEP 5: QR SCAN FEATURE (Logic)
   const startScan = async () => { 
@@ -94,9 +107,10 @@ const SendTip = () => {
       return; 
     } 
   
-    // existing sendTip logic integrated here
     try {
+      setStatus("Sending...");
       const result = await sendPayment(finalAddress, amount, memo);
+      setStatus("Success");
       
       if (gasless) { 
         setMessage("Transaction sent with zero fees"); 
@@ -111,13 +125,15 @@ const SendTip = () => {
             transactionHash: result.hash,
             amount: amount,
             recipient: finalAddress,
-            isGasless: gasless
+            isGasless: gasless,
+            timestamp: new Date().toISOString()
           } 
         });
       }, 1500);
 
     } catch (error) {
       console.error('Send tip error:', error);
+      setStatus("Failed");
       setMessage(error.message || 'Transaction failed');
     }
   }; 
@@ -173,15 +189,24 @@ const SendTip = () => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium">Recipient Address</label>
-                {/* STEP 5: QR SCAN FEATURE Button */}
-                <button 
-                  type="button"
-                  onClick={startScan}
-                  className="flex items-center space-x-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  <QrCode className="w-3 h-3" />
-                  <span>Scan QR</span>
-                </button>
+                <div className="flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={handleCopyPaymentLink}
+                    className="flex items-center space-x-1 text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors"
+                  >
+                    <LinkIcon className="w-3 h-3" />
+                    <span>{copiedLink ? 'Copied!' : 'Copy Payment Link'}</span>
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={startScan}
+                    className="flex items-center space-x-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <QrCode className="w-3 h-3" />
+                    <span>Scan QR</span>
+                  </button>
+                </div>
               </div>
               
               {/* STEP 4: UPDATE INPUT FIELD */}
@@ -298,18 +323,18 @@ const SendTip = () => {
             <button
               type="submit"
               disabled={loading || !recipient || !amount}
-              className="btn-primary w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full py-4 flex items-center justify-center space-x-2 glow"
             >
               {loading ? (
-                <div className="flex items-center justify-center space-x-2">
+                <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Sending...</span>
-                </div>
+                  <span>{status || 'Processing...'}</span>
+                </>
               ) : (
-                <div className="flex items-center justify-center space-x-2">
+                <>
                   <Send className="w-5 h-5" />
-                  <span>Send Tip</span>
-                </div>
+                  <span>Send XLM Tip</span>
+                </>
               )}
             </button>
           </div>

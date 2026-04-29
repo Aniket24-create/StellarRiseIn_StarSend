@@ -6,7 +6,10 @@
   "dependencies": {
     "@stellar/freighter-api": "^1.7.1",
     "@stellar/stellar-sdk": "^11.3.0",
+    "html5-qrcode": "^2.3.8",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.263.1",
+    "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1",
