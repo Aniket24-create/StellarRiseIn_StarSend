@@ -40,13 +40,6 @@ export const WalletProvider = ({ children }) => {
     return input;
   };
 
-  const disconnectWallet = () => {
-    setIsWalletConnected(false);
-    setPublicKey('');
-    setBalance('0');
-    setIsSimulated(false);
-  };
-
   // Initialize Stellar server (testnet)
   const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.org');
 
