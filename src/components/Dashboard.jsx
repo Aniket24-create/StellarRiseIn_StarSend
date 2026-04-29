@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
 import { QRCodeSVG } from 'qrcode.react';
@@ -37,6 +37,8 @@ const Dashboard = () => {
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const qrRef = useRef();
+
   useEffect(() => {
     if (!isWalletConnected) {
       navigate('/');
@@ -68,21 +70,26 @@ const Dashboard = () => {
   };
 
   const downloadQR = () => {
-    const canvas = document.querySelector('svg');
-    const svgData = new XMLSerializer().serializeToString(canvas);
-    const canvasElement = document.createElement('canvas');
-    const ctx = canvasElement.getContext('2d');
+    const svg = qrRef.current.querySelector('svg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
     const img = new Image();
+    
     img.onload = () => {
-      canvasElement.width = img.width;
-      canvasElement.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      const pngFile = canvasElement.toDataURL('image/png');
+      canvas.width = 500;
+      canvas.height = 500;
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 50, 50, 400, 400);
+      
+      const pngFile = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
-      downloadLink.download = 'my-tip-qr.png';
+      downloadLink.download = `starsend-qr-${publicKey.slice(0, 8)}.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
     };
+    
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   };
 
@@ -259,7 +266,7 @@ const Dashboard = () => {
                 <h3 className="text-lg font-bold">Receive Tips</h3>
               </div>
               
-              <div className="bg-white p-4 rounded-2xl inline-block mb-6 shadow-xl shadow-blue-500/5">
+              <div ref={qrRef} className="bg-white p-4 rounded-2xl inline-block mb-6 shadow-xl shadow-blue-500/5">
                 <QRCodeSVG 
                   value={`stellar:wallet?to=${publicKey}&amount=5`}
                   size={140}
