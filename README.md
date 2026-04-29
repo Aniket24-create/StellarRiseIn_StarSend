@@ -10,7 +10,7 @@
 
 *Send XLM tips instantly with minimal fees on Stellar's lightning-fast blockchain*
 
-[🚀 Live Demo](https://stellar-tipjar.vercel.app) • [📖 Documentation](#documentation) • [🐛 Report Bug](https://github.com/Aniket24-create/StellarRiseIn_StarSend/issues) • [✨ Request Feature](https://github.com/Aniket24-create/StellarRiseIn_StarSend/issues)
+[🚀 Live Demo](https://starsend.vercel.app) • [📖 Documentation](#documentation) • [🐛 Report Bug](https://github.com/Aniket24-create/StellarRiseIn_StarSend/issues) • [✨ Request Feature](https://github.com/Aniket24-create/StellarRiseIn_StarSend/issues)
 
 </div>
 
@@ -74,8 +74,18 @@
 
 </div>
 
-### 🎥 Live Demo
-👉 **[Try StellarRise StarSend](https://stellar-tipjar.vercel.app)**
+## 🌐 Live Deployment
+🚀 **Experience the app live:** [https://starsend.vercel.app/](https://starsend.vercel.app/)
+
+---
+
+## 🚀 Quick Deploy
+
+### 1. Frontend (Vercel)
+The fastest way to deploy the frontend is using the Vercel integration:
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Aniket24-create/StellarRiseIn_StarSend)
+
+> **Note:** If the link above shows a 404, please ensure you have run `npm run deploy` or connected your GitHub repository to Vercel.
 
 ---
 

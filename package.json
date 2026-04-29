@@ -2,7 +2,7 @@
   "name": "stellar-tipjar",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://stellar-tipjar.vercel.app",
+  "homepage": "https://starsend.vercel.app",
   "dependencies": {
     "@stellar/freighter-api": "^1.7.1",
     "@stellar/stellar-sdk": "^11.3.0",
