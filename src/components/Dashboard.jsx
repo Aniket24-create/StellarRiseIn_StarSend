@@ -17,7 +17,8 @@ import {
   Share2,
   Download,
   BarChart3,
-  QrCode
+  QrCode,
+  Target
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -31,7 +32,8 @@ const Dashboard = () => {
     transactions,
     disconnectWallet,
     fetchBalance,
-    analytics
+    analytics,
+    goal
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
@@ -320,6 +322,46 @@ const Dashboard = () => {
               </div>
             </div>
 
+            {/* 5. GOAL TRACKER CARD */}
+            <div className="glass-card p-6 rounded-3xl border border-white/10 bg-gradient-to-br from-purple-500/5 to-blue-500/5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-500/20 rounded-lg">
+                    <Target className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <h3 className="text-lg font-bold">Goal Tracker</h3>
+                </div>
+                <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2 py-1 rounded-md uppercase">
+                  {Math.round((goal.current / goal.target) * 100)}%
+                </span>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Current</p>
+                    <p className="text-xl font-bold">{goal.current} <span className="text-xs text-gray-500">XLM</span></p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Target</p>
+                    <p className="text-xl font-bold">{goal.target} <span className="text-xs text-gray-500">XLM</span></p>
+                  </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.3)] transition-all duration-1000"
+                    style={{ width: `${(goal.current / goal.target) * 100}%` }}
+                  ></div>
+                </div>
+                
+                <p className="text-[10px] text-center text-gray-500 italic">
+                  Tip more to reach the creator's next milestone!
+                </p>
+              </div>
+            </div>
+            
             {/* 4. TRANSACTION HISTORY PREVIEW */}
             <div className="glass-card p-6 rounded-3xl border border-white/10 flex flex-col h-full">
               <div className="flex items-center justify-between mb-6">

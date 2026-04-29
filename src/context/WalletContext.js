@@ -26,6 +26,11 @@ export const WalletProvider = ({ children }) => {
     transactionCount: 0
   });
 
+  const [goal, setGoal] = useState({
+    target: 100,
+    current: 45 // Mock starting value
+  });
+
   // Mock Username Mapping
   const usernameMap = {
     '@aniket': 'GCPWRE2D7K2C7A7M7D7J7I7G7H7E7L7L7A7R7N7E7T7W7O7R7K7H7X7Y7Z7',
@@ -250,6 +255,7 @@ export const WalletProvider = ({ children }) => {
     isGaslessEnabled,
     setIsGaslessEnabled,
     analytics,
+    goal,
     resolveUsername,
   };
 
