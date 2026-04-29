@@ -152,6 +152,13 @@ export const WalletProvider = ({ children }) => {
         };
 
         setTransactions(prev => [newTransaction, ...prev]);
+
+        // Update Goal Tracker (Simulated)
+        setGoal(prev => ({
+          ...prev,
+          current: Math.min(prev.target, prev.current + parseFloat(amount))
+        }));
+
         return transactionResult;
       }
 
@@ -212,6 +219,12 @@ export const WalletProvider = ({ children }) => {
         totalTipsSent: prev.totalTipsSent + 1,
         totalXLMSent: prev.totalXLMSent + parseFloat(amount),
         transactionCount: prev.transactionCount + 1
+      }));
+
+      // Update Goal Tracker
+      setGoal(prev => ({
+        ...prev,
+        current: Math.min(prev.target, prev.current + parseFloat(amount))
       }));
 
       return transactionResult;
