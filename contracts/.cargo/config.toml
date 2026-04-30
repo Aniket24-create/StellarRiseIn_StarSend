@@ -1,11 +1,6 @@
-# ─────────────────────────────────────────────────────────────────
-# IMPORTANT: Do NOT add [build] target = "wasm32-unknown-unknown"
-# here.  That would force `cargo test` to compile for wasm32 which
-# has no OS / test-runner and will always fail.
-#
-# Pass --target wasm32-unknown-unknown explicitly only when you want
-# to produce the deployable .wasm binary.
-# ─────────────────────────────────────────────────────────────────
+# DO NOT add [build] target = "wasm32-unknown-unknown" here.
+# That forces cargo test to compile for wasm32 which has no test runner.
+# Use --target wasm32-unknown-unknown only when building the .wasm binary.
 
 [target.wasm32-unknown-unknown]
 rustflags = ["-C", "target-feature=+sign-ext"]

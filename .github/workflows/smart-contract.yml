@@ -1,5 +1,5 @@
 name: Smart Contract CI
-# Last updated: 2026-04-30 — all CI fixes applied
+# v3 - final fix - 2026-04-30
 
 # Trigger on any push/PR that touches the contract or this workflow file
 on:

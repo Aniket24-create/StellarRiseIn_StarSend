@@ -1,5 +1,3 @@
-# [workspace] stops Cargo from walking up to the repo root.
-# Without it CI fails because there is no root-level Cargo.toml.
 [workspace]
 
 [package]
@@ -13,8 +11,6 @@ crate-type = ["cdylib"]
 [dependencies]
 soroban-sdk = "21.7.6"
 
-# testutils feature is ONLY compiled for `cargo test` (dev profile).
-# It must NOT appear in [dependencies] or the wasm build breaks.
 [dev-dependencies]
 soroban-sdk = { version = "21.7.6", features = ["testutils"] }
 
