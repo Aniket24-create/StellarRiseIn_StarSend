@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useWallet } from '../context/WalletContext';
-import { ArrowLeft, Send, QrCode, X, CheckCircle, Copy, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Send, QrCode, X, CheckCircle, Link as LinkIcon } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 
 const SendTip = () => {
@@ -37,6 +37,7 @@ const SendTip = () => {
         setResolvedAddress(resolved);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const resolveUsername = (value) => { 
