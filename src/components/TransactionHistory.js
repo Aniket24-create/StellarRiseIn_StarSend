@@ -257,7 +257,7 @@ const TransactionHistory = () => {
                     
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <span className="font-semibold text-lg">Tip Sent</span>
+                        <span className="font-semibold text-lg">{tx.isSent ? 'Tip Sent' : 'Tip Received'}</span>
                         <div className="flex items-center space-x-1">
                           <CheckCircle className="w-4 h-4 text-green-400" />
                           <span className="text-sm text-green-400 font-medium">Success</span>
@@ -266,8 +266,8 @@ const TransactionHistory = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-400">
                         <div className="flex items-center space-x-2">
-                          <span>To:</span>
-                          <span className="font-mono">{shortenAddress(tx.destination)}</span>
+                          <span>{tx.isSent ? 'To:' : 'From:'}</span>
+                          <span className="font-mono">{shortenAddress(tx.isSent ? tx.destination : tx.sender)}</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span>TX:</span>
@@ -283,8 +283,8 @@ const TransactionHistory = () => {
                   </div>
                   
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-red-400 mb-2">
-                      -{tx.amount} XLM
+                    <div className={`text-2xl font-bold ${tx.isSent ? 'text-red-400' : 'text-green-400'} mb-2`}>
+                      {tx.isSent ? '-' : '+'}{tx.amount} XLM
                     </div>
                     <div className="text-sm text-gray-500 mb-3">
                       ≈ ${(parseFloat(tx.amount) * 0.12).toFixed(2)} USD

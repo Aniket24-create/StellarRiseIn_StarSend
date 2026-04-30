@@ -118,9 +118,48 @@ export const WalletProvider = ({ children }) => {
       const account = await server.loadAccount(key);
       const xlmBalance = account.balances.find(balance => balance.asset_type === 'native');
       setBalance(xlmBalance ? xlmBalance.balance : '0');
+      
+      // Fetch transaction history after loading balance
+      await fetchTransactions(key);
     } catch (error) {
       console.error('Error fetching balance:', error);
       setBalance('0');
+    }
+  };
+
+  const fetchTransactions = async (key) => {
+    if (isSimulated) return;
+    try {
+      // Fetch payments for the account from Horizon
+      const payments = await server.payments()
+        .forAccount(key)
+        .order('desc')
+        .limit(20)
+        .call();
+
+      const formattedTransactions = payments.records
+        .filter(record => record.type === 'payment' && record.asset_type === 'native')
+        .map(record => ({
+          id: record.transaction_hash,
+          amount: record.amount,
+          destination: record.to,
+          sender: record.from,
+          timestamp: record.created_at,
+          status: 'success',
+          isSent: record.from === key
+        }));
+
+      setTransactions(formattedTransactions);
+      
+      // Update analytics based on on-chain data
+      const sentTips = formattedTransactions.filter(tx => tx.isSent);
+      setAnalytics({
+        totalTipsSent: sentTips.length,
+        totalXLMSent: sentTips.reduce((sum, tx) => sum + parseFloat(tx.amount), 0),
+        transactionCount: formattedTransactions.length
+      });
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
     }
   };
 
@@ -200,26 +239,8 @@ export const WalletProvider = ({ children }) => {
         StellarSdk.TransactionBuilder.fromXDR(signedTransaction, StellarSdk.Networks.TESTNET)
       );
 
-      // Update balance after successful transaction
+      // Update balance and transaction history after successful transaction
       await fetchBalance(publicKey);
-
-      // Add to transaction history
-      const newTransaction = {
-        id: transactionResult.hash,
-        amount: amount,
-        destination: destinationKey,
-        timestamp: new Date().toISOString(),
-        status: 'success'
-      };
-
-      setTransactions(prev => [newTransaction, ...prev]);
-      
-      // Update Analytics
-      setAnalytics(prev => ({
-        totalTipsSent: prev.totalTipsSent + 1,
-        totalXLMSent: prev.totalXLMSent + parseFloat(amount),
-        transactionCount: prev.transactionCount + 1
-      }));
 
       // Update Goal Tracker
       setGoal(prev => ({

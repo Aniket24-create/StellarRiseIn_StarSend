@@ -386,17 +386,19 @@ const Dashboard = () => {
                     <div key={tx.id} className="flex items-center justify-between p-3.5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors group">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                          <ArrowUpRight className="w-5 h-5 text-blue-400" />
+                          {tx.isSent ? <ArrowUpRight className="w-5 h-5 text-blue-400" /> : <TrendingUp className="w-5 h-5 text-green-400" />}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white/90">Sent Tip</p>
+                          <p className="text-sm font-bold text-white/90">{tx.isSent ? 'Sent Tip' : 'Received Tip'}</p>
                           <p className="text-[11px] font-mono text-gray-500 group-hover:text-gray-400 transition-colors">
-                            {shortenAddress(tx.destination)}
+                            {shortenAddress(tx.isSent ? tx.destination : tx.sender)}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-bold text-white">-{tx.amount} XLM</p>
+                        <p className={`text-sm font-bold ${tx.isSent ? 'text-white' : 'text-green-400'}`}>
+                          {tx.isSent ? '-' : '+'}{tx.amount} XLM
+                        </p>
                         <span className="text-[10px] text-green-500 font-bold uppercase tracking-wider">Success</span>
                       </div>
                     </div>
