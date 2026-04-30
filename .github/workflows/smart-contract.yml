@@ -30,6 +30,9 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Cache Cargo
         uses: actions/cache@v4
         with:
@@ -41,11 +44,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      # PATCH A: Install jq before any curl/jq usage
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      # Run tests on NATIVE host — no --target flag
+      # Native host test — no --target flag
       - name: Run unit tests
         working-directory: contracts
         run: cargo test --verbose
@@ -54,13 +53,12 @@ jobs:
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      # PATCH B: Find WASM file dynamically
+      # Dynamic WASM discovery — quoted variable
       - name: Find WASM file
-        id: wasm
         run: |
           FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm | head -n 1)
-          echo "WASM_FILE=$FILE" >> $GITHUB_ENV
-          echo "Found WASM: $FILE"
+          echo "WASM_FILE=${FILE}" >> $GITHUB_ENV
+          echo "Found WASM: ${FILE}"
 
       - name: Verify WASM binary
         run: |
@@ -70,7 +68,7 @@ jobs:
             echo "✅ WASM built: $WASM_FILE"
             echo "Size: ${SIZE} bytes (${KB} KB)"
           else
-            echo "❌ WASM not found"
+            echo "❌ WASM not found at: $WASM_FILE"
             ls -la contracts/target/wasm32-unknown-unknown/release/ || true
             exit 1
           fi
@@ -100,6 +98,9 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Cache Cargo
         uses: actions/cache@v4
         with:
@@ -111,26 +112,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      # PATCH A: Install jq
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
       - name: Build WASM
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      # PATCH B: Find WASM file dynamically
+      # Dynamic WASM discovery — quoted variable
       - name: Find WASM file
         run: |
           FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm | head -n 1)
-          echo "WASM_FILE=$FILE" >> $GITHUB_ENV
-          echo "Found WASM: $FILE"
+          echo "WASM_FILE=${FILE}" >> $GITHUB_ENV
+          echo "Found WASM: ${FILE}"
 
-      # PATCH D: Faster + stable Stellar CLI install
+      # Stellar CLI install via official script
       - name: Install Stellar CLI
         run: |
           curl -sSf https://stellar.org/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      # Separate step to add Stellar to PATH
+      - name: Add Stellar to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      # Debug step — verify WASM path and CLI are available
+      - name: Debug WASM + CLI
+        run: |
+          echo "WASM_FILE=$WASM_FILE"
+          which stellar || true
+          stellar --version || true
 
       - name: Configure network
         run: |
@@ -151,6 +158,7 @@ jobs:
           curl -sf "https://friendbot.stellar.org?addr=${DEPLOYER_ADDRESS}" | jq .
           echo "✅ Account funded"
 
+      # Deploy using quoted WASM_FILE variable
       - name: Deploy contract
         id: deploy
         run: |
@@ -162,7 +170,7 @@ jobs:
           echo "CONTRACT_ID=${CONTRACT_ID}" >> $GITHUB_ENV
           echo "✅ Deployed: ${CONTRACT_ID}"
 
-      # PATCH C: || true prevents failure if already initialized
+      # || true prevents failure if already initialized
       - name: Initialize contract
         run: |
           stellar contract invoke \
