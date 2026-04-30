@@ -1,11 +1,6 @@
-[build]
-target = "wasm32-unknown-unknown"
+# Only apply wasm target when explicitly building for wasm.
+# Do NOT set [build] target here — that would break `cargo test`
+# which needs to compile for the native host target.
 
 [target.wasm32-unknown-unknown]
 rustflags = ["-C", "target-feature=+sign-ext"]
-
-[target.x86_64-pc-windows-msvc]
-linker = "rust-lld.exe"
-
-[target.x86_64-pc-windows-gnu]
-linker = "rust-lld.exe"

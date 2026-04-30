@@ -1,3 +1,7 @@
+[workspace]
+# Declare this directory as its own workspace so Cargo does not
+# walk up to the repo root (which has no Cargo.toml).
+
 [package]
 name = "stellar-tipjar-contract"
 version = "0.1.0"
