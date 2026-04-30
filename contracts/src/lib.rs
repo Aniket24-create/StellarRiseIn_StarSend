@@ -77,4 +77,5 @@ impl TipJarContract {
 }
 
 // Tests live in a separate file to keep lib.rs clean
+// CI version: 2026-04-30
 mod test;

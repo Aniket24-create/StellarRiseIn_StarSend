@@ -1,7 +1,9 @@
 name: Smart Contract CI
+# Last updated: 2026-04-30 — all CI fixes applied
 
 # Trigger on any push/PR that touches the contract or this workflow file
 on:
+  workflow_dispatch:   # ← allows manual trigger from GitHub Actions UI
   push:
     branches: [ main, develop ]
     paths:
