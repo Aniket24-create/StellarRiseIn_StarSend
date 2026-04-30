@@ -122,10 +122,7 @@ jobs:
           echo "Found WASM: ${FILE}"
 
       - name: Install Stellar CLI
-        run: curl -sSf https://stellar.org/install.sh | sh
-
-      - name: Add Stellar CLI to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: cargo install --locked stellar-cli --features opt
 
       - name: Debug
         run: |
