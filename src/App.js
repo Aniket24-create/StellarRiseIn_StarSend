@@ -14,9 +14,12 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Routes>
-        <Route path="/:username" element={<CreatorProfile />} />
         {!isWalletConnected ? (
-          <Route path="*" element={<Hero />} />
+          <>
+            <Route path="/" element={<Hero />} />
+            <Route path="/:username" element={<CreatorProfile />} />
+            <Route path="*" element={<Hero />} />
+          </>
         ) : (
           <>
             <Route path="/" element={<Dashboard />} />
@@ -24,6 +27,7 @@ function AppContent() {
             <Route path="/send" element={<SendTip />} />
             <Route path="/success" element={<Success />} />
             <Route path="/history" element={<TransactionHistory />} />
+            <Route path="/:username" element={<CreatorProfile />} />
             <Route path="*" element={<Dashboard />} />
           </>
         )}

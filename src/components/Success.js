@@ -22,13 +22,14 @@ const Success = () => {
     doc.text(`Date: ${new Date(timestamp || Date.now()).toLocaleString()}`, 20, 40);
     doc.text(`Amount: ${amount} XLM`, 20, 50);
     doc.text(`Recipient: ${recipient}`, 20, 60);
-    doc.text(`Transaction Hash: ${transactionHash}`, 20, 70);
+    doc.text(`Transaction Hash: ${transactionHash || 'N/A'}`, 20, 70);
     doc.text(`Status: Success`, 20, 80);
     doc.text(`Fee: ${isGasless ? '0 XLM (Gasless)' : '0.00001 XLM'}`, 20, 90);
     
     doc.text('Thank you for using StarSend!', 20, 110);
     
-    doc.save(`starsend-receipt-${transactionHash.slice(0, 8)}.pdf`);
+    const fileName = transactionHash ? `starsend-receipt-${transactionHash.slice(0, 8)}.pdf` : 'starsend-receipt.pdf';
+    doc.save(fileName);
   };
 
   const handleCopyHash = async () => {

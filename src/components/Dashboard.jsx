@@ -332,7 +332,7 @@ const Dashboard = () => {
                   <h3 className="text-lg font-bold">Goal Tracker</h3>
                 </div>
                 <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2 py-1 rounded-md uppercase">
-                  {Math.round((goal.current / goal.target) * 100)}%
+                  {goal.target > 0 ? Math.round((goal.current / goal.target) * 100) : 0}%
                 </span>
               </div>
               
@@ -352,7 +352,7 @@ const Dashboard = () => {
                 <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
                   <div 
                     className="h-full bg-gradient-to-r from-blue-500 to-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.3)] transition-all duration-1000"
-                    style={{ width: `${(goal.current / goal.target) * 100}%` }}
+                    style={{ width: `${goal.target > 0 ? (goal.current / goal.target) * 100 : 0}%` }}
                   ></div>
                 </div>
                 
