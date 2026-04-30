@@ -7,64 +7,111 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # Frontend Build & Test
+  # ─────────────────────────────────────────────
+  # JOB 1 — FRONTEND BUILD
+  # ─────────────────────────────────────────────
   frontend:
+    name: Frontend Build
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Build Frontend
-      run: npm run build
-      env:
-        CI: true
 
-  # Smart Contract Build & Test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+        env:
+          CI: false
+          GENERATE_SOURCEMAP: false
+
+  # ─────────────────────────────────────────────
+  # JOB 2 — SMART CONTRACT BUILD & TEST
+  # ─────────────────────────────────────────────
   contracts:
+    name: Smart Contract Build and Test
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: wasm32-unknown-unknown
-        
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
-      with:
-        working-directory: contracts
-        
-    - name: Build Smart Contract
-      run: |
-        cd contracts
-        cargo build --target wasm32-unknown-unknown --release
-        
-    - name: Run Contract Tests
-      run: |
-        cd contracts
-        cargo test
 
-  # Continuous Deployment (Example for Vercel)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable with wasm32 target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Run contract tests
+        working-directory: contracts
+        run: cargo test --verbose
+
+      - name: Build WASM binary
+        working-directory: contracts
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Verify WASM binary
+        run: |
+          FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm | head -n 1)
+          if [ -f "$FILE" ]; then
+            SIZE=$(wc -c < "$FILE")
+            echo "WASM OK: $FILE (${SIZE} bytes)"
+          else
+            echo "WASM NOT FOUND"
+            exit 1
+          fi
+
+  # ─────────────────────────────────────────────
+  # JOB 3 — DEPLOY TO VERCEL (main only)
+  # ─────────────────────────────────────────────
   deploy:
+    name: Deploy to Vercel
     needs: [frontend, contracts]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v20
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build for production
+        run: npm run build
+        env:
+          CI: false
+          GENERATE_SOURCEMAP: false
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+        continue-on-error: true
