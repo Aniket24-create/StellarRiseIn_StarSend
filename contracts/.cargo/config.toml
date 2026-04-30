@@ -1,5 +1,11 @@
+[build]
+target = "wasm32-unknown-unknown"
+
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+sign-ext"]
+
 [target.x86_64-pc-windows-msvc]
 linker = "rust-lld.exe"
 
-[target.wasm32-unknown-unknown]
+[target.x86_64-pc-windows-gnu]
 linker = "rust-lld.exe"

@@ -167,7 +167,154 @@ Planned Solution: The memo input will show a live X/28 character counter next to
 
 ---
 
-## Quick Start
+## Smart Contract (Soroban)
+
+The TipJar smart contract is written in Rust using the **Soroban SDK** and deployed on **Stellar Testnet**.
+
+### Contract Overview
+
+| Property | Value |
+|----------|-------|
+| **Language** | Rust (Soroban SDK v21.7.6) |
+| **Network** | Stellar Testnet |
+| **Contract ID** | `CXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` *(updated after CI/CD deploy)* |
+| **Explorer** | [View on Stellar Expert](https://stellar.expert/explorer/testnet) |
+| **Build Target** | `wasm32-unknown-unknown` |
+
+### Contract Functions
+
+```rust
+// Initialize the contract with an owner
+fn init(env: Env, owner: Address)
+
+// Get the owner address
+fn get_owner(env: Env) -> Address
+
+// Get total number of tips recorded
+fn get_tip_count(env: Env) -> u32
+
+// Record a tip event (emits on-chain event)
+fn tip(env: Env, sender: Address, amount: i128, message: Symbol)
+```
+
+### Contract Source Code
+
+```rust
+// contracts/src/lib.rs
+#![no_std]
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Env, Symbol, Address, log};
+
+#[contracttype]
+pub enum DataKey {
+    Owner,
+    TipCount,
+}
+
+#[contract]
+pub struct TipJarContract;
+
+#[contractimpl]
+impl TipJarContract {
+    pub fn init(env: Env, owner: Address) {
+        if env.storage().persistent().has(&DataKey::Owner) {
+            panic!("Already initialized");
+        }
+        env.storage().persistent().set(&DataKey::Owner, &owner);
+        env.storage().persistent().set(&DataKey::TipCount, &0_u32);
+    }
+
+    pub fn get_owner(env: Env) -> Address {
+        env.storage().persistent().get(&DataKey::Owner).expect("Not initialized")
+    }
+
+    pub fn get_tip_count(env: Env) -> u32 {
+        env.storage().persistent().get(&DataKey::TipCount).unwrap_or(0)
+    }
+
+    pub fn tip(env: Env, sender: Address, amount: i128, message: Symbol) {
+        sender.require_auth();
+        if amount <= 0 { panic!("Amount must be positive"); }
+        let count: u32 = env.storage().persistent().get(&DataKey::TipCount).unwrap_or(0);
+        env.storage().persistent().set(&DataKey::TipCount, &(count + 1));
+        env.events().publish((symbol_short!("tip"), sender.clone()), (amount, message));
+        log!(&env, "Tip recorded: sender={}, amount={}", sender, amount);
+    }
+}
+```
+
+### Build the Contract Locally
+
+> **Prerequisites:** Linux/macOS or WSL on Windows (MSVC linker not required on Linux)
+
+```bash
+# Navigate to contracts directory
+cd contracts
+
+# Add wasm target (one-time setup)
+rustup target add wasm32-unknown-unknown
+
+# Run tests
+cargo test
+
+# Build WASM binary
+cargo build --target wasm32-unknown-unknown --release
+
+# Output: contracts/target/wasm32-unknown-unknown/release/stellar_tipjar_contract.wasm
+```
+
+### Deploy the Contract Manually
+
+```bash
+# Install Stellar CLI
+curl -L https://github.com/stellar/stellar-cli/releases/latest/download/stellar-cli-x86_64-unknown-linux-gnu.tar.gz | tar xz
+sudo mv stellar /usr/local/bin/
+
+# Configure testnet
+stellar network add testnet \
+  --rpc-url https://soroban-testnet.stellar.org \
+  --network-passphrase "Test SDF Network ; September 2015"
+
+# Generate and fund deployer account
+stellar keys generate deployer --network testnet
+curl "https://friendbot.stellar.org?addr=$(stellar keys address deployer)"
+
+# Deploy contract
+stellar contract deploy \
+  --wasm contracts/target/wasm32-unknown-unknown/release/stellar_tipjar_contract.wasm \
+  --source deployer \
+  --network testnet
+
+# Initialize contract (replace CONTRACT_ID and OWNER_ADDRESS)
+stellar contract invoke \
+  --id <CONTRACT_ID> \
+  --source deployer \
+  --network testnet \
+  -- init \
+  --owner <OWNER_ADDRESS>
+
+# Verify deployment
+stellar contract invoke \
+  --id <CONTRACT_ID> \
+  --source deployer \
+  --network testnet \
+  -- get_owner
+```
+
+### Automated CI/CD Deployment
+
+The contract is automatically built and deployed via **GitHub Actions** on every push to `main`.
+
+See [`.github/workflows/smart-contract.yml`](.github/workflows/smart-contract.yml) for the full pipeline.
+
+Pipeline steps:
+1. ✅ Run all Rust unit tests
+2. ✅ Build WASM binary
+3. ✅ Upload WASM artifact
+4. ✅ Deploy to Stellar Testnet (on `main` branch)
+5. ✅ Initialize contract
+6. ✅ Verify deployment on-chain
+
+---
 
 ### Prerequisites
 

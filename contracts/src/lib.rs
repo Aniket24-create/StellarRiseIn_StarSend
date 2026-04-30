@@ -1,34 +1,73 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Env, Symbol, Address, storage::PersistentDataKey};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Env, Symbol, Address, log};
+
+// Storage keys
+#[contracttype]
+pub enum DataKey {
+    Owner,
+    TipCount,
+}
 
 #[contract]
 pub struct TipJarContract;
 
 #[contractimpl]
 impl TipJarContract {
-    // Initialize the contract with an owner
+    /// Initialize the contract with an owner address.
+    /// Can only be called once.
     pub fn init(env: Env, owner: Address) {
-        if env.storage().persistent().has(&Symbol::new(&env, "owner")) {
+        if env.storage().persistent().has(&DataKey::Owner) {
             panic!("Already initialized");
         }
-        env.storage().persistent().set(&Symbol::new(&env, "owner"), &owner);
+        env.storage().persistent().set(&DataKey::Owner, &owner);
+        env.storage().persistent().set(&DataKey::TipCount, &0_u32);
     }
 
-    // Get the owner of the tip jar
+    /// Return the owner of this TipJar.
     pub fn get_owner(env: Env) -> Address {
-        env.storage().persistent().get(&Symbol::new(&env, "owner")).expect("Not initialized")
+        env.storage()
+            .persistent()
+            .get(&DataKey::Owner)
+            .expect("Not initialized")
     }
 
-    // A simple function to log a tip (in a real contract, this might handle tokens)
+    /// Return the total number of tips sent through this contract.
+    pub fn get_tip_count(env: Env) -> u32 {
+        env.storage()
+            .persistent()
+            .get(&DataKey::TipCount)
+            .unwrap_or(0)
+    }
+
+    /// Record a tip event.
+    /// The sender must authorise the call.
+    /// `amount`  — tip amount in stroops (1 XLM = 10_000_000 stroops)
+    /// `message` — short memo attached to the tip (max ~9 chars as Symbol)
     pub fn tip(env: Env, sender: Address, amount: i128, message: Symbol) {
+        // Require the sender to sign this transaction
         sender.require_auth();
-        
-        // In a real Soroban contract, you would use the token SDK to transfer funds:
-        // let token_client = token::Client::new(&env, &token_id);
-        // token_client.transfer(&sender, &get_owner(env.clone()), &amount);
-        
-        // For this example, we'll just emit an event
-        env.events().publish((Symbol::new(&env, "tip"), sender), (amount, message));
+
+        if amount <= 0 {
+            panic!("Amount must be positive");
+        }
+
+        // Increment tip counter
+        let count: u32 = env
+            .storage()
+            .persistent()
+            .get(&DataKey::TipCount)
+            .unwrap_or(0);
+        env.storage()
+            .persistent()
+            .set(&DataKey::TipCount, &(count + 1));
+
+        // Emit an event so the frontend / indexers can track tips
+        env.events().publish(
+            (symbol_short!("tip"), sender.clone()),
+            (amount, message),
+        );
+
+        log!(&env, "Tip recorded: sender={}, amount={}", sender, amount);
     }
 }
 
