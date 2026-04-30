@@ -1,6 +1,2 @@
-# DO NOT add [build] target = "wasm32-unknown-unknown" here.
-# That forces cargo test to compile for wasm32 which has no test runner.
-# Use --target wasm32-unknown-unknown only when building the .wasm binary.
-
 [target.wasm32-unknown-unknown]
 rustflags = ["-C", "target-feature=+sign-ext"]

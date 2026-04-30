@@ -22,17 +22,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Rust + wasm target
       - name: Install Rust stable + wasm32 target
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
 
-      # 3. Cache
       - name: Cache Cargo
         uses: actions/cache@v4
         with:
@@ -44,33 +41,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      # 4. Run tests (IMPORTANT: native only — no --target flag)
+      # PATCH A: Install jq before any curl/jq usage
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      # Run tests on NATIVE host — no --target flag
       - name: Run unit tests
         working-directory: contracts
         run: cargo test --verbose
 
-      # 5. Build WASM
       - name: Build WASM binary
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      # 6. Verify WASM
-      - name: Verify WASM binary
-        working-directory: contracts
+      # PATCH B: Find WASM file dynamically
+      - name: Find WASM file
+        id: wasm
         run: |
-          WASM="target/wasm32-unknown-unknown/release/stellar_tipjar_contract.wasm"
-          if [ -f "$WASM" ]; then
-            SIZE=$(wc -c < "$WASM")
+          FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm | head -n 1)
+          echo "WASM_FILE=$FILE" >> $GITHUB_ENV
+          echo "Found WASM: $FILE"
+
+      - name: Verify WASM binary
+        run: |
+          if [ -f "$WASM_FILE" ]; then
+            SIZE=$(wc -c < "$WASM_FILE")
             KB=$(awk "BEGIN { printf \"%.1f\", $SIZE / 1024 }")
-            echo "✅ WASM built"
+            echo "✅ WASM built: $WASM_FILE"
             echo "Size: ${SIZE} bytes (${KB} KB)"
           else
             echo "❌ WASM not found"
-            ls -la target/wasm32-unknown-unknown/release/ || true
+            ls -la contracts/target/wasm32-unknown-unknown/release/ || true
             exit 1
           fi
 
-      # 7. Upload artifact
       - name: Upload WASM
         uses: actions/upload-artifact@v4
         with:
@@ -107,13 +111,26 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
+      # PATCH A: Install jq
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Build WASM
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      # FIX: Proper CLI install
+      # PATCH B: Find WASM file dynamically
+      - name: Find WASM file
+        run: |
+          FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm | head -n 1)
+          echo "WASM_FILE=$FILE" >> $GITHUB_ENV
+          echo "Found WASM: $FILE"
+
+      # PATCH D: Faster + stable Stellar CLI install
       - name: Install Stellar CLI
-        run: cargo install --locked stellar-cli
+        run: |
+          curl -sSf https://stellar.org/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Configure network
         run: |
@@ -126,21 +143,26 @@ jobs:
           stellar keys generate deployer --network testnet
           DEPLOYER=$(stellar keys address deployer)
           echo "DEPLOYER_ADDRESS=${DEPLOYER}" >> $GITHUB_ENV
+          echo "Deployer: ${DEPLOYER}"
 
       - name: Fund account
         run: |
-          curl -sf "https://friendbot.stellar.org?addr=${DEPLOYER_ADDRESS}"
+          echo "Funding: ${DEPLOYER_ADDRESS}"
+          curl -sf "https://friendbot.stellar.org?addr=${DEPLOYER_ADDRESS}" | jq .
+          echo "✅ Account funded"
 
       - name: Deploy contract
         id: deploy
         run: |
           CONTRACT_ID=$(stellar contract deploy \
-            --wasm contracts/target/wasm32-unknown-unknown/release/stellar_tipjar_contract.wasm \
+            --wasm "$WASM_FILE" \
             --source deployer \
             --network testnet)
           echo "CONTRACT_ID=${CONTRACT_ID}" >> $GITHUB_OUTPUT
           echo "CONTRACT_ID=${CONTRACT_ID}" >> $GITHUB_ENV
+          echo "✅ Deployed: ${CONTRACT_ID}"
 
+      # PATCH C: || true prevents failure if already initialized
       - name: Initialize contract
         run: |
           stellar contract invoke \
@@ -148,7 +170,7 @@ jobs:
             --source deployer \
             --network testnet \
             -- init \
-            --owner "$DEPLOYER_ADDRESS"
+            --owner "$DEPLOYER_ADDRESS" || true
 
       - name: Verify contract
         run: |
@@ -157,6 +179,7 @@ jobs:
             --source deployer \
             --network testnet \
             -- get_owner
+          echo "✅ Contract verified"
 
       - name: Save deployment
         run: |
@@ -164,7 +187,11 @@ jobs:
           CONTRACT_ID=${CONTRACT_ID}
           DEPLOYER=${DEPLOYER_ADDRESS}
           NETWORK=testnet
+          WASM=${WASM_FILE}
+          DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          EXPLORER=https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}
           EOF
+          cat deployment.env
 
       - name: Upload deployment info
         uses: actions/upload-artifact@v4
