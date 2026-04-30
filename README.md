@@ -51,7 +51,7 @@ Live app: [https://starsend.vercel.app](https://starsend.vercel.app)
 
 ### Demo Video
 
-Full walkthrough: [Watch Demo Video](#) *(Replace with your actual video link)*
+Full walkthrough: [Watch Demo Video](https://drive.google.com/file/d/1jcLCZRpz2pcoOp6XA0eqaz_GcZuJgLIM/view?usp=drive_link) 
 
 The demo video covers wallet connection, sending a tip, viewing transaction history, and the success screen.
 
