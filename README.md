@@ -9,7 +9,7 @@
 
 Send XLM tips instantly with minimal fees on Stellar's lightning-fast blockchain.
 
-[Live Demo](https://starsend.vercel.app) | [Demo Video](#demo-video) | [User Feedback](#user-onboarding-and-feedback) | [Report Bug](https://github.com/Aniket24-create/StellarRiseIn_StarSend/issues)
+[Live Demo](https://starsend.vercel.app) | [Demo Video](#demo-video) | [User Feedback](https://docs.google.com/forms/d/e/1FAIpQLSfAXmUhgvCGcZ1Pz3z42RomTH8jlwUb4Km4pmkGrcBHNLsGfA/viewform?usp=header) 
 
 
 ---
@@ -97,7 +97,7 @@ All wallets are verifiable on [Stellar Expert Testnet Explorer](https://stellar.
 
 The full exported responses are available in the Excel sheet linked below.
 
-Excel Sheet: [user_feedback.xlsx](./user_feedback.xlsx) *(Export from Google Forms and attach to the repo)*
+Excel Sheet: [user_feedback.xlsx](https://docs.google.com/spreadsheets/d/1f_S_dmKBQVGwUgGoMvFOO4n_MpE6QbIFKNbW1mMf6Lc/edit?usp=sharing) *(Export from Google Forms and attach to the repo)*
 
 #### Feedback Highlights
 
