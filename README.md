@@ -16,12 +16,12 @@
 
 ---
 
-## � Table of] Contents
+## 📋 Table of Contents
 
 - [🌟 Features](#-features)
-- [� Demoh](#-demo)
-- [� Quiack Start](#-quick-start)
-- [�️S Installation](#️-installation)
+- [🎯 Demo](#-demo)
+- [🚀 Quick Start](#-quick-start)
+- [🛠️ Installation](#️-installation)
 - [⚙️ Configuration](#️-configuration)
 - [🏗️ Architecture](#️-architecture)
 - [🔧 Development](#-development)
@@ -50,7 +50,7 @@
 - **Glassmorphism** - Modern glass-effect components
 - **Gradient Accents** - Beautiful blue/purple gradient themes
 
-### � Security & Performance
+### 🛡️ Security & Performance
 - **Testnet Safe** - Built for Stellar testnet environment
 - **Minimal Fees** - Only $0.00001 per transaction
 - **Bank-Grade Security** - Protected by Stellar blockchain
