@@ -15,9 +15,6 @@ on:
 
 jobs:
 
-  # ───────────────────────────────────────────────────────────────
-  # JOB 1 — BUILD & TEST (runs on every push / PR)
-  # ───────────────────────────────────────────────────────────────
   build-and-test:
     name: Build and Test Soroban Contract
     runs-on: ubuntu-latest
@@ -53,18 +50,23 @@ jobs:
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      - name: Find and verify WASM file
+      - name: Find WASM file
         run: |
           FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm 2>/dev/null | head -n 1)
           if [ -z "$FILE" ]; then
-            echo "ERROR: No .wasm file found"
+            echo "❌ No WASM file found"
             ls -la contracts/target/wasm32-unknown-unknown/release/ || true
             exit 1
           fi
-          SIZE=$(wc -c < "$FILE")
-          KB=$(awk "BEGIN { printf \"%.1f\", $SIZE / 1024 }")
           echo "WASM_FILE=${FILE}" >> $GITHUB_ENV
-          echo "WASM OK: $FILE (${SIZE} bytes / ${KB} KB)"
+          echo "✅ Found WASM: ${FILE}"
+
+      - name: Verify WASM binary
+        run: |
+          SIZE=$(wc -c < "$WASM_FILE")
+          KB=$(awk "BEGIN { printf \"%.1f\", $SIZE / 1024 }")
+          echo "✅ WASM OK: $WASM_FILE"
+          echo "📦 Size: ${SIZE} bytes (${KB} KB)"
 
       - name: Upload WASM artifact
         uses: actions/upload-artifact@v4
@@ -73,9 +75,6 @@ jobs:
           path: contracts/target/wasm32-unknown-unknown/release/*.wasm
           retention-days: 30
 
-  # ───────────────────────────────────────────────────────────────
-  # JOB 2 — DEPLOY TO STELLAR TESTNET (main branch only)
-  # ───────────────────────────────────────────────────────────────
   deploy-testnet:
     name: Deploy to Stellar Testnet
     runs-on: ubuntu-latest
@@ -113,22 +112,19 @@ jobs:
         run: |
           FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm 2>/dev/null | head -n 1)
           if [ -z "$FILE" ]; then
-            echo "ERROR: No .wasm file found"
+            echo "❌ No WASM file found"
+            ls -la contracts/target/wasm32-unknown-unknown/release/ || true
             exit 1
           fi
           echo "WASM_FILE=${FILE}" >> $GITHUB_ENV
-          echo "Found WASM: ${FILE}"
+          echo "✅ Found WASM: ${FILE}"
 
-      # Install Stellar CLI via cargo — guaranteed in PATH on ubuntu runners
       - name: Install Stellar CLI
-        run: |
-          cargo install --locked stellar-cli
-          echo "Stellar CLI installed:"
-          stellar --version
+        run: cargo install --locked stellar-cli
 
-      - name: Debug environment
+      - name: Debug
         run: |
-          echo "WASM_FILE = $WASM_FILE"
+          echo "WASM_FILE=$WASM_FILE"
           which stellar
           stellar --version
 
@@ -149,7 +145,7 @@ jobs:
         run: |
           echo "Funding: ${DEPLOYER_ADDRESS}"
           curl -sf "https://friendbot.stellar.org?addr=${DEPLOYER_ADDRESS}" | jq .
-          echo "Account funded"
+          echo "✅ Account funded"
 
       - name: Deploy contract
         id: deploy
@@ -160,7 +156,7 @@ jobs:
             --network testnet)
           echo "CONTRACT_ID=${CONTRACT_ID}" >> $GITHUB_OUTPUT
           echo "CONTRACT_ID=${CONTRACT_ID}" >> $GITHUB_ENV
-          echo "Deployed: ${CONTRACT_ID}"
+          echo "✅ Deployed: ${CONTRACT_ID}"
 
       - name: Initialize contract
         run: |
@@ -170,7 +166,6 @@ jobs:
             --network testnet \
             -- init \
             --owner "$DEPLOYER_ADDRESS" || true
-          echo "Contract initialized"
 
       - name: Verify contract
         run: |
@@ -179,15 +174,14 @@ jobs:
             --source deployer \
             --network testnet \
             -- get_owner
-          echo "Contract verified"
+          echo "✅ Contract verified"
 
       - name: Save deployment info
         run: |
-          cat > deployment.env << ENVEOF
+          cat <<ENVEOF > deployment.env
           CONTRACT_ID=${CONTRACT_ID}
           DEPLOYER=${DEPLOYER_ADDRESS}
           NETWORK=testnet
-          WASM=${WASM_FILE}
           DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           EXPLORER=https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}
           ENVEOF
