@@ -1,5 +1,6 @@
 name: Smart Contract CI
 
+# Trigger on any push/PR that touches the contract or this workflow file
 on:
   push:
     branches: [ main, develop ]
@@ -10,9 +11,10 @@ on:
     branches: [ main ]
     paths:
       - 'contracts/**'
+      - '.github/workflows/smart-contract.yml'
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Job 1 — Build & Test (runs on every push / PR)
+# JOB 1 — Build & Test  (every push / PR)
 # ─────────────────────────────────────────────────────────────────────────────
 jobs:
   build-and-test:
@@ -20,18 +22,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout
-      - name: Checkout code
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Install Rust stable + wasm target
-      - name: Install Rust stable with wasm32 target
+      # ── 2. Rust toolchain + wasm32 target ────────────────────────────────────
+      - name: Install Rust stable + wasm32 target
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
 
-      # 3. Cache Cargo artefacts (key on Cargo.lock for reproducibility)
-      - name: Cache Cargo registry & build artefacts
+      # ── 3. Cargo cache ───────────────────────────────────────────────────────
+      - name: Cache Cargo registry and build artefacts
         uses: actions/cache@v4
         with:
           path: |
@@ -42,37 +44,38 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      # 4. Run tests on the NATIVE host target (not wasm32).
-      #    The .cargo/config.toml no longer forces wasm32 for [build],
-      #    so plain `cargo test` compiles for the host and runs normally.
+      # ── 4. Run tests on the NATIVE host (not wasm32) ─────────────────────────
+      # KEY FIX: Do NOT pass --target here.
+      # .cargo/config.toml no longer sets [build] target = wasm32,
+      # so `cargo test` compiles for the Linux host and the test runner works.
       - name: Run unit tests (native host)
         working-directory: contracts
-        run: cargo test --verbose
+        run: cargo test --verbose 2>&1
 
-      # 5. Build the optimised WASM binary for deployment
+      # ── 5. Build the deployable WASM binary ──────────────────────────────────
       - name: Build WASM binary (release)
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      # 6. Verify the WASM file was produced and report its size
+      # ── 6. Verify the WASM file exists and print its size ────────────────────
       - name: Verify WASM binary
         working-directory: contracts
         run: |
-          # Cargo replaces hyphens with underscores in the output filename
-          WASM_FILE="target/wasm32-unknown-unknown/release/stellar_tipjar_contract.wasm"
-          if [ -f "$WASM_FILE" ]; then
-            SIZE=$(wc -c < "$WASM_FILE")
-            KB=$(awk "BEGIN {printf \"%.1f\", $SIZE/1024}")
+          # Cargo converts hyphens → underscores in the output filename
+          WASM="target/wasm32-unknown-unknown/release/stellar_tipjar_contract.wasm"
+          if [ -f "$WASM" ]; then
+            SIZE=$(wc -c < "$WASM")
+            KB=$(awk "BEGIN { printf \"%.1f\", $SIZE / 1024 }")
             echo "✅ WASM binary built successfully"
-            echo "📦 Binary size: ${SIZE} bytes (${KB} KB)"
+            echo "📦 Size: ${SIZE} bytes  (${KB} KB)"
           else
-            echo "❌ WASM binary not found at: $WASM_FILE"
-            echo "Available files in release dir:"
-            ls -la target/wasm32-unknown-unknown/release/ || true
+            echo "❌ WASM binary not found at: $WASM"
+            echo "Files in release dir:"
+            ls -la target/wasm32-unknown-unknown/release/ 2>/dev/null || echo "(dir not found)"
             exit 1
           fi
 
-      # 7. Upload WASM as a build artefact (kept for 30 days)
+      # ── 7. Upload WASM as a build artefact ───────────────────────────────────
       - name: Upload WASM artefact
         uses: actions/upload-artifact@v4
         with:
@@ -81,7 +84,7 @@ jobs:
           retention-days: 30
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Job 2 — Deploy to Stellar Testnet (main branch only)
+# JOB 2 — Deploy to Stellar Testnet  (main branch only, after tests pass)
 # ─────────────────────────────────────────────────────────────────────────────
   deploy-testnet:
     name: Deploy to Stellar Testnet
@@ -90,15 +93,15 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rust stable with wasm32 target
+      - name: Install Rust stable + wasm32 target
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Cache Cargo registry & build artefacts
+      - name: Cache Cargo registry and build artefacts
         uses: actions/cache@v4
         with:
           path: |
@@ -113,7 +116,7 @@ jobs:
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      # Install Stellar CLI via cargo (most reliable, always up-to-date)
+      # Install Stellar CLI via cargo — most reliable, always up-to-date
       - name: Install Stellar CLI
         run: |
           cargo install --locked stellar-cli --features opt
@@ -125,18 +128,17 @@ jobs:
             --rpc-url https://soroban-testnet.stellar.org \
             --network-passphrase "Test SDF Network ; September 2015"
 
-      - name: Generate deployer keypair
+      - name: Generate deployer keypair and export address
         run: |
           stellar keys generate deployer --network testnet
           DEPLOYER_ADDRESS=$(stellar keys address deployer)
-          echo "DEPLOYER_ADDRESS=$DEPLOYER_ADDRESS" >> $GITHUB_ENV
-          echo "Deployer address: $DEPLOYER_ADDRESS"
+          echo "DEPLOYER_ADDRESS=${DEPLOYER_ADDRESS}" >> "$GITHUB_ENV"
+          echo "Deployer: ${DEPLOYER_ADDRESS}"
 
-      - name: Fund deployer account via Friendbot
+      - name: Fund deployer via Friendbot
         run: |
           echo "Funding: $DEPLOYER_ADDRESS"
-          RESPONSE=$(curl -sf "https://friendbot.stellar.org?addr=$DEPLOYER_ADDRESS")
-          echo "$RESPONSE" | jq .
+          curl -sf "https://friendbot.stellar.org?addr=${DEPLOYER_ADDRESS}" | jq .
           echo "✅ Account funded"
 
       - name: Deploy contract to testnet
@@ -147,11 +149,11 @@ jobs:
             --source deployer \
             --network testnet \
             --fee 1000000)
-          echo "CONTRACT_ID=$CONTRACT_ID" >> $GITHUB_OUTPUT
-          echo "CONTRACT_ID=$CONTRACT_ID" >> $GITHUB_ENV
-          echo "✅ Contract deployed: $CONTRACT_ID"
+          echo "CONTRACT_ID=${CONTRACT_ID}" >> "$GITHUB_OUTPUT"
+          echo "CONTRACT_ID=${CONTRACT_ID}" >> "$GITHUB_ENV"
+          echo "✅ Deployed contract: ${CONTRACT_ID}"
 
-      - name: Initialize contract
+      - name: Initialise contract
         run: |
           stellar contract invoke \
             --id "$CONTRACT_ID" \
@@ -159,9 +161,9 @@ jobs:
             --network testnet \
             -- init \
             --owner "$DEPLOYER_ADDRESS"
-          echo "✅ Contract initialized with owner: $DEPLOYER_ADDRESS"
+          echo "✅ Contract initialised with owner: $DEPLOYER_ADDRESS"
 
-      - name: Verify contract — get_owner
+      - name: Verify — get_owner
         run: |
           stellar contract invoke \
             --id "$CONTRACT_ID" \
@@ -170,7 +172,7 @@ jobs:
             -- get_owner
           echo "✅ get_owner verified"
 
-      - name: Verify contract — get_tip_count
+      - name: Verify — get_tip_count
         run: |
           stellar contract invoke \
             --id "$CONTRACT_ID" \
@@ -181,17 +183,16 @@ jobs:
 
       - name: Print explorer link
         run: |
-          echo "🔗 View on Stellar Expert:"
-          echo "   https://stellar.expert/explorer/testnet/contract/$CONTRACT_ID"
+          echo "🔗 https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}"
 
       - name: Save deployment info
         run: |
-          cat > deployment.env <<EOF
-          CONTRACT_ID=$CONTRACT_ID
+          cat > deployment.env << EOF
+          CONTRACT_ID=${CONTRACT_ID}
           NETWORK=testnet
-          DEPLOYER=$DEPLOYER_ADDRESS
+          DEPLOYER=${DEPLOYER_ADDRESS}
           DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          EXPLORER=https://stellar.expert/explorer/testnet/contract/$CONTRACT_ID
+          EXPLORER=https://stellar.expert/explorer/testnet/contract/${CONTRACT_ID}
           EOF
           cat deployment.env
 
