@@ -14,18 +14,19 @@ on:
       - '.github/workflows/smart-contract.yml'
 
 jobs:
-  # ─────────────────────────────────────────────
+
+  # ───────────────────────────────────────────────────────────────
   # JOB 1 — BUILD & TEST
-  # ─────────────────────────────────────────────
+  # ───────────────────────────────────────────────────────────────
   build-and-test:
-    name: Build & Test Soroban Contract
+    name: Build and Test Soroban Contract
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rust stable + wasm32 target
+      - name: Install Rust stable with wasm32 target
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
@@ -44,7 +45,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      # Native host test — no --target flag
       - name: Run unit tests
         working-directory: contracts
         run: cargo test --verbose
@@ -53,7 +53,6 @@ jobs:
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      # Dynamic WASM discovery — quoted variable
       - name: Find WASM file
         run: |
           FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm | head -n 1)
@@ -65,24 +64,24 @@ jobs:
           if [ -f "$WASM_FILE" ]; then
             SIZE=$(wc -c < "$WASM_FILE")
             KB=$(awk "BEGIN { printf \"%.1f\", $SIZE / 1024 }")
-            echo "✅ WASM built: $WASM_FILE"
+            echo "WASM OK: $WASM_FILE"
             echo "Size: ${SIZE} bytes (${KB} KB)"
           else
-            echo "❌ WASM not found at: $WASM_FILE"
+            echo "WASM NOT FOUND: $WASM_FILE"
             ls -la contracts/target/wasm32-unknown-unknown/release/ || true
             exit 1
           fi
 
-      - name: Upload WASM
+      - name: Upload WASM artifact
         uses: actions/upload-artifact@v4
         with:
           name: contract-wasm
           path: contracts/target/wasm32-unknown-unknown/release/*.wasm
           retention-days: 30
 
-  # ─────────────────────────────────────────────
-  # JOB 2 — DEPLOY
-  # ─────────────────────────────────────────────
+  # ───────────────────────────────────────────────────────────────
+  # JOB 2 — DEPLOY TO STELLAR TESTNET
+  # ───────────────────────────────────────────────────────────────
   deploy-testnet:
     name: Deploy to Stellar Testnet
     runs-on: ubuntu-latest
@@ -93,7 +92,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Rust + wasm
+      - name: Install Rust stable with wasm32 target
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
@@ -112,53 +111,47 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Build WASM
+      - name: Build WASM binary
         working-directory: contracts
         run: cargo build --target wasm32-unknown-unknown --release
 
-      # Dynamic WASM discovery — quoted variable
       - name: Find WASM file
         run: |
           FILE=$(ls contracts/target/wasm32-unknown-unknown/release/*.wasm | head -n 1)
           echo "WASM_FILE=${FILE}" >> $GITHUB_ENV
           echo "Found WASM: ${FILE}"
 
-      # Stellar CLI install via official script
       - name: Install Stellar CLI
-        run: |
-          curl -sSf https://stellar.org/install.sh | sh
+        run: curl -sSf https://stellar.org/install.sh | sh
 
-      # Separate step to add Stellar to PATH
-      - name: Add Stellar to PATH
+      - name: Add Stellar CLI to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      # Debug step — verify WASM path and CLI are available
-      - name: Debug WASM + CLI
+      - name: Debug
         run: |
           echo "WASM_FILE=$WASM_FILE"
           which stellar || true
           stellar --version || true
 
-      - name: Configure network
+      - name: Configure Stellar network
         run: |
           stellar network add testnet \
             --rpc-url https://soroban-testnet.stellar.org \
             --network-passphrase "Test SDF Network ; September 2015"
 
-      - name: Generate deployer
+      - name: Generate deployer keypair
         run: |
           stellar keys generate deployer --network testnet
           DEPLOYER=$(stellar keys address deployer)
           echo "DEPLOYER_ADDRESS=${DEPLOYER}" >> $GITHUB_ENV
-          echo "Deployer: ${DEPLOYER}"
+          echo "Deployer address: ${DEPLOYER}"
 
-      - name: Fund account
+      - name: Fund deployer via Friendbot
         run: |
           echo "Funding: ${DEPLOYER_ADDRESS}"
           curl -sf "https://friendbot.stellar.org?addr=${DEPLOYER_ADDRESS}" | jq .
-          echo "✅ Account funded"
+          echo "Account funded"
 
-      # Deploy using quoted WASM_FILE variable
       - name: Deploy contract
         id: deploy
         run: |
@@ -168,9 +161,8 @@ jobs:
             --network testnet)
           echo "CONTRACT_ID=${CONTRACT_ID}" >> $GITHUB_OUTPUT
           echo "CONTRACT_ID=${CONTRACT_ID}" >> $GITHUB_ENV
-          echo "✅ Deployed: ${CONTRACT_ID}"
+          echo "Deployed contract: ${CONTRACT_ID}"
 
-      # || true prevents failure if already initialized
       - name: Initialize contract
         run: |
           stellar contract invoke \
@@ -187,9 +179,9 @@ jobs:
             --source deployer \
             --network testnet \
             -- get_owner
-          echo "✅ Contract verified"
+          echo "Contract verified"
 
-      - name: Save deployment
+      - name: Save deployment info
         run: |
           cat <<EOF > deployment.env
           CONTRACT_ID=${CONTRACT_ID}
